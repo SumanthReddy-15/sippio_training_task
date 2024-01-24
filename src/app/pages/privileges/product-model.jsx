@@ -324,7 +324,7 @@ import "../../../assets/special-bids.scss";
 import headingsData from "../common/json-data";
 import { useGetProductsQuery } from "../../store/usersApi";
 
-// constant
+
 const ProductModel = (props) => {
   const [selectedCountry, setSelectedCountry] = useState("");
   const [productData, setProductData] = useState();
@@ -334,7 +334,7 @@ const ProductModel = (props) => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(true);
-
+// const
   const [additionalFields, setAdditionalFields] = useState({
     platform: "",
     quantity: "",
