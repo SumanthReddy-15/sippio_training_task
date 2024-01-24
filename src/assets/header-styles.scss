@@ -1,0 +1,43 @@
+.icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin: 0px 20px;
+}
+
+.h-b {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 10px;
+}
+
+.h-t-c{
+  color: #0078d4;
+}
+
+
+.profile {
+  border: solid 2px gainsboro;
+  /* margin: 10px; */
+  padding: 5px;
+  width: fit-content;
+  border-radius: 3px;
+}
+
+.profileContent {
+  display: flex;
+  justify-content: space-between;
+  width: fit-content;
+}
+@media (max-width: 430px) {
+  .header {
+    display: grid;
+    justify-content: center;
+    align-items: center;
+  }
+}

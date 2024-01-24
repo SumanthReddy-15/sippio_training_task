@@ -1,0 +1,93 @@
+$sidebar-width-expanded: 200px;
+$sidebar-width-collapsed: 50px;
+$scrollbar-width: 6px;
+$scrollbar-thumb-color: #c8c8c8;
+$scrollbar-thumb-radius: 3px;
+$sidebar-max-height: 89vh;
+$toggle-button-position: 10px;
+$image-width: 150px;
+$active-menu-bg-color: green;
+
+.sidebar {
+  margin: 10px;
+  transition: width 0.3s;
+  overflow-x: hidden;
+  position: relative;
+  max-height: $sidebar-max-height;
+  overflow-y: auto;
+
+  &-main {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 10px;
+  }
+
+  &-expanded {
+    width: $sidebar-width-expanded;
+  }
+
+  &-collapsed {
+    width: $sidebar-width-collapsed;
+  }
+
+  &::-webkit-scrollbar {
+    width: $scrollbar-width;
+
+    &-thumb {
+      background-color: $scrollbar-thumb-color;
+      border-radius: $scrollbar-thumb-radius;
+    }
+  }
+
+  img {
+    width: 100%;
+    height: auto;
+  }
+}
+
+.sidebarMain {
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.image {
+  width: $image-width;
+  height: auto;
+}
+
+.toogle-button {
+  position: absolute;
+  bottom: $toggle-button-position;
+  right: $toggle-button-position;
+
+  &-collapsed {
+    left: $toggle-button-position;
+  }
+}
+
+.link {
+  text-decoration: none;
+}
+
+.submenuIcon {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.activeMenuItem {
+  background-color: $active-menu-bg-color;
+}
+
+.expandIcon, .expand_Icon {
+  float: right;
+
+  &.expandIcon {
+  }
+  
+  &.expand_Icon {
+    cursor: pointer;
+  }
+}

@@ -1,0 +1,71 @@
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+.App {
+  /* margin: 10px; */
+}
+
+.navbarStyle {
+  padding: 0.5rem 1rem !important;
+}
+
+.profileContent {
+  padding: 8px;
+}
+
+.fui-TableCell {
+  vertical-align: baseline !important;
+}
+
+.fui-DialogSurface{
+  padding: 0% !important;
+  border-radius: 0% !important;
+}
+
+.fui-TableCell{
+  padding-top: 10px !important;
+}
+
+.fui-DialogBody{
+  gap: 0px !important;
+}
+
+.fui-DialogActions{
+  padding: 0px 12px 12px 0px;
+}
+
+.fui-DialogContent{
+  min-height: 400px !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

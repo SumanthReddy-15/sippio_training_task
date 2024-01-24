@@ -1,0 +1,121 @@
+.grid-shim {
+  column-gap: 16px;
+}
+
+.card {
+  margin: 10px;
+}
+
+.card-header {
+  background-color: lightgray;
+  margin: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.product {
+  display: flex;
+  justify-content: space-between;
+  // margin: 10px;
+  background-color: #f5f5f5;
+  padding: 0px 10px;
+}
+
+.card-product {
+  border: 2px solid gainsboro;
+}
+
+.t-c {
+padding: 10px 15px;
+}
+
+.m-t-10{
+  margin-top: 10px;
+}
+.m-t-20{
+  margin-top: 30px;
+}
+
+.m-b-20{
+  margin-bottom: 20px;
+}
+
+.m-l-10{
+  margin-left: 10px;
+}
+
+.m-lr-10{
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.dialog-wide {
+  max-width: 1000px !important;
+}
+
+.d-body {
+  // display: flex !important;
+}
+.dialog{
+
+  padding: 0px !important;
+}
+
+.dialog-data {
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+}
+
+.p-grid{
+  display: flex;
+ justify-content: space-between;
+}
+
+.p-grid-bg{
+  
+  background-color: #f5f5f5;
+  padding: 12px;
+}
+
+.button {
+  border: 2px solid gainsboro;
+  background-color: skyblue;
+  border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.b-g {
+  display: flex;
+  column-gap: 16px;
+}
+
+.db-w {
+  width: 100%;
+}
+
+.icon-label-container {
+  display: flex;
+  align-items: center;
+}
+
+.icon-label-container svg {
+  width: 20px; 
+  height: 20px; 
+  margin-right: 8px;
+}
+
+.hr-m {
+  margin: 0px;
+}
+
+.i-color{
+  color: #0078d4;
+}
+
+.font-w {
+  font-weight: 600;
+}
