@@ -324,6 +324,7 @@ import "../../../assets/special-bids.scss";
 import headingsData from "../common/json-data";
 import { useGetProductsQuery } from "../../store/usersApi";
 
+// constant
 const ProductModel = (props) => {
   const [selectedCountry, setSelectedCountry] = useState("");
   const [productData, setProductData] = useState();
