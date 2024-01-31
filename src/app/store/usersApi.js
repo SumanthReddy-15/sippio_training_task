@@ -150,15 +150,16 @@ export const usersApi = createApi({
         }),
       }),
       getSpecialBidsById: build.query({
-        query: () => ({
-          url: "/api/v1/special-bids/${id}",
+        query: (id) => ({
+          url: `/api/v1/special-bids/${id}`,
           method: "get",
         }),
       }),
       addSpecialBids: build.mutation({
-        query: () => ({
+        query: (formData) => ({
           url: "/api/v1/special-bids",
           method: "post",
+          data: formData,
         }),
       }),
       updateSpecialBids: build.mutation({
@@ -168,8 +169,8 @@ export const usersApi = createApi({
         }),
       }),
       deleteSpecialBids: build.mutation({
-        query: () => ({
-          url: "/api/v1/special-bids/${id}",
+        query: (id) => ({
+          url: `/api/v1/special-bids/${id}`,
           method: "delete",
           invalidatesTags: ["SpecialBids"],
         }),

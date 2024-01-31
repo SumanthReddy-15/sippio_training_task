@@ -7,6 +7,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableCellLayout,
   TableHeader,
   TableHeaderCell,
   TableRow,
@@ -26,44 +27,100 @@ import {
   useDeleteSpecialBidsMutation,
   useGetSpecialBidsQuery,
 } from "../../store/usersApi";
+import headingsData from "../common/json-data";
+import { callMsGraph } from "../../core/settings/graph";
+import { useMsal } from "@azure/msal-react";
+import { loginRequest } from "../../core/settings/authconfig";
 
 const SpecialBids = () => {
+  const { accounts, instance } = useMsal();
+  const [userData, setUserData] = useState({});
   const {
     data: specialBidsData,
     isLoading,
-    refetch,
+    refetch: refetchBidsData,
   } = useGetSpecialBidsQuery();
-  console.log(specialBidsData);
-  const { deleteSpecialBid } = useDeleteSpecialBidsMutation();
+  // console.log(specialBidsData);
+  const [
+    deleteSpecialBids,
+    { isLoading: isDeleteLoading, error: deleteError },
+  ] = useDeleteSpecialBidsMutation();
 
-  const [showLoading, setShowLoading] = useState(false);
-  const [deleteSuccess, setDeleteSuccess] = useState(false);
+  const [customLoading, setCustomLoading] = useState(false);
+  const { headings } = headingsData.en;
 
-  useEffect(() => {
-    if (isLoading) {
-      const timer = setTimeout(() => setShowLoading(true), 3000);
-      return () => clearTimeout(timer);
-    } else {
-      setShowLoading(false);
-    }
-  }, [isLoading]);
-
-  // useEffect(() => {
-  //   if (isSuccess) {
-  //     setDeleteSuccess(true);
-  //     refetch();
-  //   }
-  // }, [isSuccess, refetch]);
+  const showLoading = customLoading || isDeleteLoading;
 
   const handleDelete = async (id) => {
+    console.log("Deleting ID:", id);
     try {
-      await deleteSpecialBid(id).unwrap();
+      const response = await deleteSpecialBids(id).unwrap();
+      console.log("Delete response:", response);
+      refetchBidsData();
     } catch (error) {
-      console.error("Delete error:", error);
+      console.error("Failed to delete special bid", error);
     }
   };
   const RefreshData = () => {
-    refetch();
+    refetchBidsData();
+    setCustomLoading(true);
+    setTimeout(() => {
+      setCustomLoading(false);
+    }, 3000);
+  };
+  useEffect(() => {
+    refetchBidsData();
+  }, []);
+
+  useEffect(() => {
+    if (isLoading) {
+      setCustomLoading(true);
+    } else {
+      setCustomLoading(false);
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await instance.acquireTokenSilent({
+          ...loginRequest,
+          account: accounts[0],
+        });
+
+        const data = await callMsGraph(response.accessToken);
+        setUserData(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, [accounts, instance]);
+
+  const userName = userData.displayName;
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const options = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    };
+    return date.toLocaleDateString("en-US", options);
+  };
+
+  const toCapitalizedWords = (str) => {
+    return (
+      str
+        // Insert a space before all caps
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        // Capitalize the first character of each word
+        .replace(/\b[a-z]/g, (char) => char.toUpperCase())
+    );
   };
 
   return (
@@ -79,7 +136,7 @@ const SpecialBids = () => {
               onClick={RefreshData}
               disabled={isLoading}
             >
-              Refresh
+              {headings.refresh}
             </Button>
           </div>
           <div>
@@ -89,29 +146,47 @@ const SpecialBids = () => {
                 className="btn"
                 appearance="primary"
               >
-                Add
+                {headings.add}
               </Button>
             </Link>
           </div>
         </div>
       </div>
       <hr className="hr" />
-      <div className="t-c">
+      <div className="table">
         <Table>
           {specialBidsData?.records?.length > 0 && (
             <TableHeader>
               <TableRow>
-                <TableHeaderCell>
-                  <Text weight="bold">Partner Name</Text>
+                <TableHeaderCell className="partner-account-name">
+                  <Text weight="bold">{headings.partnerAccountName}</Text>
                 </TableHeaderCell>
-                <TableHeaderCell>
-                  <Text weight="bold">Customer Name</Text>
+                <TableHeaderCell className="subscriber-account-name">
+                  <Text weight="bold">{headings.SubscriberAccountName}</Text>
                 </TableHeaderCell>
-                <TableHeaderCell>
-                  <Text weight="bold">Email</Text>
+                <TableHeaderCell className="subscriber-account-number">
+                  <Text weight="bold">{headings.SubscriberAccountNumber}</Text>
                 </TableHeaderCell>
-                <TableHeaderCell>
-                  <Text weight="bold">Actions</Text>
+                <TableHeaderCell className="special-bid-number">
+                  <Text weight="bold">{headings.SpecialBidNumber}</Text>
+                </TableHeaderCell>
+                <TableHeaderCell className="name">
+                  <Text weight="bold">{headings.name}</Text>
+                </TableHeaderCell>
+                <TableHeaderCell className="type">
+                  <Text weight="bold">{headings.type}</Text>
+                </TableHeaderCell>
+                <TableHeaderCell className="created-date">
+                  <Text weight="bold">{headings.createdDate}</Text>
+                </TableHeaderCell>
+                <TableHeaderCell className="status">
+                  <Text weight="bold">{headings.status}</Text>
+                </TableHeaderCell>
+                <TableHeaderCell className="user">
+                  <Text weight="bold">{headings.user}</Text>
+                </TableHeaderCell>
+                <TableHeaderCell className="actions">
+                  <Text weight="bold">{headings.actions}</Text>
                 </TableHeaderCell>
               </TableRow>
             </TableHeader>
@@ -124,35 +199,82 @@ const SpecialBids = () => {
                   <Spinner
                     label="Loading..."
                     size="small"
-                    style={{ marginTop: "300px" }}
+                    style={{ margin: "100px 450px" }}
                   />
                 </TableCell>
               </TableRow>
             ) : specialBidsData?.records?.length ? (
-              specialBidsData.records.map((bid) => (
-                <TableRow key={bid.id}>
-                  <TableCell truncate>{bid.id}</TableCell>
-                  <TableCell>{bid.accountName}</TableCell>
-                  <TableCell>{bid.mail}</TableCell>
-                  <TableCell>
-                    <div className="b-g">
-                      <Tooltip content="View" relationship="label">
-                        <Button icon={<EyeRegular />} aria-label="View" />
+              specialBidsData?.records?.map((bid) => {
+                return (
+                  <TableRow key={bid.id}>
+                    <TableCell>
+                      <Tooltip content={bid.partnerName} relationship="label">
+                        <TableCellLayout truncate>
+                          {bid.partnerName ? bid.partnerName : "-"}
+                        </TableCellLayout>
                       </Tooltip>
-                      <Tooltip content="Edit" relationship="label">
-                        <Button icon={<EditRegular />} aria-label="Edit" />
+                    </TableCell>
+                    <TableCell>
+                      {" "}
+                      {bid.subscriberName ? bid.subscriberName : "-"}{" "}
+                    </TableCell>
+                    <TableCell>
+                      {" "}
+                      {bid.subscriberId ? bid.subscriberId : "-"}{" "}
+                    </TableCell>
+                    <TableCell>{bid.bidNumber ? bid.bidNumber : "-"}</TableCell>
+                    <TableCell>
+                      {bid.specialBidName ? bid.specialBidName : "-"}
+                    </TableCell>
+                    <TableCell>
+                      {" "}
+                      {bid.specialBidType
+                        ? toCapitalizedWords(bid.specialBidType)
+                        : "-"}{" "}
+                    </TableCell>
+                    <TableCell>
+                      {" "}
+                      {bid.estimatedStartDate
+                        ? formatDate(bid.estimatedStartDate)
+                        : "-"}{" "}
+                    </TableCell>
+                    <TableCell>{bid.status ? bid.status : "-"}</TableCell>
+                    <TableCell>
+                      <Tooltip content={userName} relationship="label">
+                        <TableCellLayout truncate>
+                          {userName ? userName : "-"}
+                        </TableCellLayout>
                       </Tooltip>
-                      <Tooltip content="Delete" relationship="label">
-                        <Button
-                          icon={<DeleteRegular />}
-                          aria-label="Delete"
-                          onClick={() => handleDelete(bid.id)}
-                        />
-                      </Tooltip>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                    </TableCell>
+                    <TableCell>
+                      <div className="b-g">
+                        <Tooltip content="View" relationship="label">
+                          <Button
+                            icon={<EyeRegular className="i-color" />}
+                            aria-label="View"
+                            appearance="transparent"
+                          />
+                        </Tooltip>
+                        <Tooltip content="Edit" relationship="label">
+                          <Button
+                            icon={<EditRegular className="i-color" />}
+                            aria-label="Edit"
+                            appearance="transparent"
+                          />
+                        </Tooltip>
+                        <Tooltip content="Delete" relationship="label">
+                          <Button
+                            icon={<DeleteRegular className="i-color" />}
+                            aria-label="Delete"
+                            appearance="transparent"
+                            onClick={() => handleDelete(bid.id)}
+                          />
+                        </Tooltip>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <MessageBar>
                 <MessageBarBody>No Special Bids available</MessageBarBody>

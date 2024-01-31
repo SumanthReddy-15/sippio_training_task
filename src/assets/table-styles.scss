@@ -19,7 +19,7 @@
   display: flex;
   justify-content: space-between;
   /* padding: 10px; */
-  margin:20px 10px;
+  margin: 20px 10px;
 }
 
 .p-bc-m {
@@ -29,9 +29,12 @@
 .table {
   // border: solid 2px gainsboro;
   padding: 10px 20px;
-  max-height: calc(100vh - 200px); /* Adjust [HeaderHeight] to the height of your header */
+  max-height: calc(
+    100vh - 200px
+  );
   overflow-y: auto;
-  margin-top: 10px; 
+  margin-top: 10px;
+  height: 70vh;
 }
 
 .dialog-table {
@@ -50,9 +53,9 @@
 
 .border {
   border: 2px solid gainsboro;
-margin: 0px 20px;
-height: 86%;
-// width: 100%;
+  margin: 0px 20px;
+  height: 86%;
+  // width: 100%;
 }
 
 .table-2 {
@@ -124,12 +127,13 @@ height: 86%;
   // display: flex;
   width: -webkit-fill-available;
   padding: 0px 20px 0px 0px;
+  max-width: calc(100vw - 277px);
 }
 
 .routesMain {
   display: flex;
-  height: 100vh;
-  overflow-x: hidden;
+  height: 97vh;
+  overflow-x: auto;
 }
 
 .profile-image {

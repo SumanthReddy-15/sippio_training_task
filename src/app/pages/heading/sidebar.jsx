@@ -12,7 +12,7 @@ import "../../../assets/sidebar-styles.scss";
 import { initializeIcons } from "@fluentui/react/lib/Icons";
 import { Link } from "react-router-dom";
 import { FontIcon } from "@fluentui/react";
-FontIcon
+FontIcon;
 
 initializeIcons();
 
@@ -55,7 +55,7 @@ const Sidebar = () => {
   //     : "toggle-button toggle-button-collapsed";
 
   const handleImage = () => {
-    window.open("https://ensarsolutions.com/");
+    window.open("https://www.sippio.io/");
   };
 
   return (

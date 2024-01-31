@@ -1,50 +1,95 @@
+$light-gray: lightgray;
+$gainsboro: gainsboro;
+$background-light: #f5f5f5;
+$sky-blue: skyblue;
+$icon-blue: #0078d4;
+$common-width-small: 100px;
+$common-width-medium: 200px;
+$common-width-large: 250px;
+
+%width-small {
+  width: $common-width-small;
+}
+
+%width-medium {
+  width: $common-width-medium;
+}
+
+%width-large {
+  width: $common-width-large;
+}
+
+.partner-account-name {
+  @extend %width-large;
+}
+
+.subscriber-account-name,
+.special-bid-number,
+.created-date,
+.subscriber-account-number {
+  @extend %width-medium;
+}
+
+.name,
+.type,
+.status,
+.user,
+.actions {
+  @extend %width-small;
+}
+
+
 .grid-shim {
   column-gap: 16px;
 }
 
 .card {
   margin: 10px;
-}
 
-.card-header {
-  background-color: lightgray;
-  margin: 5px;
-  display: flex;
-  justify-content: space-between;
+  &-header {
+    background-color: $light-gray;
+    margin: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  &-product {
+    border: 2px solid $gainsboro;
+  }
 }
 
 .product {
   display: flex;
   justify-content: space-between;
-  // margin: 10px;
-  background-color: #f5f5f5;
+  background-color: $background-light;
   padding: 0px 10px;
 }
 
-.card-product {
-  border: 2px solid gainsboro;
-}
-
 .t-c {
-padding: 10px 15px;
+  padding: 10px 15px;
 }
 
-.m-t-10{
+.p-tb {
+  padding: 10px 0px 40px;
+}
+
+.m-t-10 {
   margin-top: 10px;
 }
-.m-t-20{
-  margin-top: 30px;
+
+.m-t-20 {
+  margin-top: 30px; 
 }
 
-.m-b-20{
+.m-b-20 {
   margin-bottom: 20px;
 }
 
-.m-l-10{
+.m-l-10 {
   margin-left: 10px;
 }
 
-.m-lr-10{
+.m-lr-10 {
   margin-left: 10px;
   margin-right: 10px;
 }
@@ -56,41 +101,40 @@ padding: 10px 15px;
 .d-body {
   // display: flex !important;
 }
-.dialog{
 
+.dialog {
   padding: 0px !important;
+
+  &-data {
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+  }
 }
 
-.dialog-data {
+.p-grid {
   display: flex;
-  flex-direction: column;
-  padding: 15px;
-}
+  justify-content: space-between;
 
-.p-grid{
-  display: flex;
- justify-content: space-between;
-}
-
-.p-grid-bg{
-  
-  background-color: #f5f5f5;
-  padding: 12px;
+  &-bg {
+    background-color: $background-light;
+    padding: 12px;
+  }
 }
 
 .button {
-  border: 2px solid gainsboro;
-  background-color: skyblue;
+  border: 2px solid $gainsboro;
+  background-color: $sky-blue;
   border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    margin-top: 10px;
-    cursor: pointer;
+  width: 30px;
+  height: 30px;
+  margin-top: 10px;
+  cursor: pointer;
 }
 
 .b-g {
   display: flex;
-  column-gap: 16px;
+  column-gap: 12px;
 }
 
 .db-w {
@@ -100,22 +144,24 @@ padding: 10px 15px;
 .icon-label-container {
   display: flex;
   align-items: center;
-}
 
-.icon-label-container svg {
-  width: 20px; 
-  height: 20px; 
-  margin-right: 8px;
+  svg {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+  }
 }
 
 .hr-m {
   margin: 0px;
 }
 
-.i-color{
-  color: #0078d4;
+.i-color {
+  color: $icon-blue;
 }
 
 .font-w {
   font-weight: 600;
 }
+
+

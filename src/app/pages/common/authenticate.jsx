@@ -14,9 +14,9 @@ const Authenticate = () => {
   }, [accounts, instance]);
 
   async function signin() {
-    console.log("sigin");
+    console.log("signin");
     if (accounts.length === 0) {
-      instance.loginRedirect(loginRequest).catcha((e) => {
+      instance.loginRedirect(loginRequest).catch((e) => {
         console.error(e);
       });
     } else {
@@ -26,7 +26,7 @@ const Authenticate = () => {
         .then((res) => {
           setdata(res);
           console.log(res);
-          localStorage.setItem("loginToken", res?.accessToken)
+          localStorage.setItem("loginToken", res?.accessToken);
           if (res) {
             navigate("/");
           }

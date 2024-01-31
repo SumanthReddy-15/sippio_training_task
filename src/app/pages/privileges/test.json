@@ -1,0 +1,68 @@
+{
+    "partnerId": "fd78596b-b878-4665-9178-7235547c4ed7",
+    "subscriberId": "dfb20089-e2dd-44ff-b0c6-278363e6c5ca",
+    "subscriberName": "Ensar PVT",
+    "partnerName": "",
+    "products": [
+      {
+        "productId": "d80f30d9-ffb4-4b57-af5d-5d12c45c7b3a",
+        "availabilityType": "Country",
+        "availabilityName": "United States",
+        "communicationPlatform": "Microsoft Teams",
+        "serviceLocations": 10,
+        "quantity": 10,
+        "planId": "9055cd82-f7b6-4e6d-b8ce-49fe051e6e9a",
+        "pricing": [
+          {
+            "pricingId": "12baa627-0142-4d8f-b316-c0220271b927",
+            "requestPrice": 4,
+            "offerPrice": 4.21
+          },
+          {
+            "pricingId": "c9ccbadb-7b6f-4752-a7e8-4cab5db6571d",
+            "requestPrice": 3,
+            "offerPrice": 3.1
+          },
+          {
+            "pricingId": "26f1b591-2047-4136-b8f2-8492c1d51bfc",
+            "requestPrice": 0.5,
+            "offerPrice": 0.6
+          }
+        ],
+        "comments": ""
+      }
+    ],
+    "collaborators": [
+      {
+        "key": "PartnerContactPerson",
+        "name": "test",
+        "email": "first30@sippiotest.com"
+      },
+      {
+        "key": "PartnerSigningAuthority",
+        "name": "test",
+        "email": "first30@sippiotest.com"
+      }
+    ],
+    "contractTerm": "12 Months",
+    "concessionInfo": "",
+    "committedQuantity": "10",
+    "commitmentTerms": "",
+    "estimatedStartDate": "2023-11-22T18:30:00Z",
+    "estimatedEndDate": "2023-11-23T18:30:00Z",
+    "specialRequirements": "",
+    "attributes": [
+      {
+        "key": "opportunityType",
+        "name": "Opportunity Type",
+        "value": "enhanced"
+      }
+    ],
+    "attachments": [],
+    "notifications": [],
+    "processStatus": "UpdateRequest",
+    "specialBidNotes": "",
+    "specialBidType": "Price Request",
+    "specialBidName": null
+  }
+  

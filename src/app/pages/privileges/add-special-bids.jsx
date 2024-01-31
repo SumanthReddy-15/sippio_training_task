@@ -61,7 +61,7 @@ function AddSpecialBids() {
   const dispatch = useDispatch();
   const [addSpecialBids, isLoading] = useAddSpecialBidsMutation();
   const { data: customers } = useGetCustomerStructureQuery();
-  console.log(customers);
+  // console.log(customers);
   const { data: products } = useGetProductsQuery();
   const [isFormModified, setIsFormModified] = useState(false);
   const { headings } = headingsData.en;
@@ -69,6 +69,24 @@ function AddSpecialBids() {
   const [totalQuantity, setTotalQuantity] = useState(0);
   const [isParentSelected, setIsParentSelected] = useState(false);
   const [isCustomerSelected, setIsCustomerSelected] = useState(false);
+  const [selectedRateCard, setSelectedRateCard] = useState();
+  const [selectedSpecialBid, setSelectedSpecialBid] = useState();
+  const [specialBidName, setSpecialBidName] = useState("");
+
+  const [errors, setErrors] = useState({
+    accountName: "",
+    quantity: "",
+    specialBidsName: "",
+  });
+
+  const validate = () => {
+    let tempErrors = { ...errors };
+    tempErrors.accountName = selectedAccount ? "" : "Account name is required ";
+    tempErrors.quantity = totalQuantity ? "" : "Total quantity is required";
+
+    setErrors(tempErrors);
+    return Object.values(tempErrors).every((x) => x === "");
+  };
 
   const handleTotalQuantityChange = (newTotal) => {
     setTotalQuantity(newTotal);
@@ -92,7 +110,7 @@ function AddSpecialBids() {
 
         const data = await callMsGraph(response.accessToken);
         setUserData(data);
-        console.log(data);
+        // console.log(data);
       } catch (error) {
         console.error(error);
       }
@@ -140,12 +158,24 @@ function AddSpecialBids() {
 
   if (customers && customers.records?.length > 0) {
     uniqueParentDetails = getParentDetails(customers.records);
-    console.log(uniqueParentDetails);
+    // console.log(uniqueParentDetails);
   }
 
+  const [selectedParent, setSelectedParent] = useState(null);
+  const [selectedSubscriber, setSelectedSubscriber] = useState(null);
+  const [selectedOption, setSelectedOption] = useState(null);
+
+  const handleOptionChange = (event, option) => {
+    let val = option?.optionText;
+    setSelectedOption(val);
+  };
+
   const handleParentIdChange = (event, option) => {
-    console.log(event, event.target.value, event.target.textContent, option);
+    // console.log(event, event.target.value, event.target.textContent, option);
     let selectedDetails = option?.optionValue;
+    let selectedSubscriber = option?.optionText;
+    setSelectedParent(selectedDetails);
+    setSelectedSubscriber(selectedSubscriber);
     // let [selectedName, selectedAccount] = selectedDetails.split(" (");
     // selectedAccount = selectedAccount.slice(0, -1);
 
@@ -154,14 +184,14 @@ function AddSpecialBids() {
         obj.customerType === "Subscriber" && obj.parentId === selectedDetails
       );
     });
-    console.log(data);
+    // console.log(data);
     setCustomerName(data);
     setSelectedAccount(null);
     setIsParentSelected(!!event.target.textContent);
   };
 
   const handleAccountChange = (event) => {
-    console.log(event, event.target.textContent);
+    // console.log(event, event.target.textContent);
     setSelectedAccount(event.target.textContent);
     setIsCustomerSelected(!!event.target.textContent);
   };
@@ -181,12 +211,78 @@ function AddSpecialBids() {
     ? new Date(startDate.getTime() + 86400000)
     : null;
 
-  const handleSubmit = () => {
-    const newBid = {
-      uniqueKey: customers?.records?.accountName,
+  const handleSubmit = async () => {
+    if (!validate()) return;
+    // const newBid = {
+    //   uniqueKey: customers?.records?.accountName,
+    //   partnerName: customers?.records?.partnerName,
+    // };
+    // console.log(newBid);
+    let subscriberId = selectedAccount?.match(/\(([^)]+)\)/)[1];
+    let subscriberName = selectedAccount
+      ?.replace(/\s*\([^)]*\)\s*/g, "")
+      ?.trim();
+    const formData = {
+      partnerId: selectedParent,
+      subscriberId: subscriberId,
+      subscriberName: subscriberName,
+      partnerName: selectedSubscriber,
+      products: modalData?.map((product) => ({
+        productId: product?.id,
+        availabilityType: headings.country,
+        availabilityName: product?.country,
+        communicationPlatform: product?.productName,
+        serviceLocations: product?.location,
+        quantity: product?.quantity,
+        planId: product?.planId,
+        pricing: product?.pricing?.map((price) => ({
+          pricingId: price?.id,
+          requestPrice: price?.requestPrice,
+        })),
+        comments: product.comments,
+      })),
+      collaborators: [
+        {
+          key: "PartnerContactPerson",
+          name: userName,
+          email: userEmail,
+        },
+        {
+          key: "PartnerSigningAuthority",
+          name: userName,
+          email: userEmail,
+        },
+      ],
+      contractTerm: selectedOption,
+      concessionInfo: "",
+      committedQuantity: totalQuantity.toString(),
+      commitmentTerms: "",
+      estimatedStartDate: startDate ? startDate.toISOString() : null,
+      estimatedEndDate: endDate ? endDate.toISOString() : null,
+      specialRequirements: "",
+      attributes: [
+        {
+          key: "opportunityType",
+          name: "Opportunity Type",
+          value: "",
+        },
+      ],
+      attachments: [],
+      notifications: [],
+      processStatus: "",
+      specialBidNotes: "",
+      specialBidType: selectedSpecialBid,
+      specialBidName: specialBidName,
     };
-    console.log(newBid);
-    dispatch(addSpecialBids(newBid));
+
+    console.log("formData....", formData);
+
+    try {
+      await addSpecialBids(formData).unwrap();
+      navigate(`/specialBids`);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
 
     navigate(`/specialBids`);
   };
@@ -196,16 +292,36 @@ function AddSpecialBids() {
   //   text: `${customer?.accountName} - ${customer?.accountNumber}`,
   // }));
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [modalData, setModalData] = useState();
+  const [modalData, setModalData] = useState([]);
 
-  const toggleDialog = () => {
-    setIsDialogOpen(!isDialogOpen);
+  // const toggleDialog = () => {
+  //   setIsDialogOpen(!isDialogOpen);
+  // };
+
+  const handleOpenDialog = () => {
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
   };
 
   const onSubmitData = (data) => {
-    console.log("add-special-bid.js", data);
-    setModalData([data]);
-    toggleDialog();
+    // console.log("add-special-bid.js", data);
+    const newData = [...modalData, data];
+    // console.log("add-special-bid.js----newData", data);
+    setModalData(newData);
+    // toggleDialog();
+    handleCloseDialog();
+  };
+
+  const handleRadioChange = (event, name) => {
+    let selectedPlan = event.target.value;
+    if (name === "rateCard") {
+      setSelectedRateCard(selectedPlan);
+    } else {
+      setSelectedSpecialBid(selectedPlan);
+    }
   };
 
   return (
@@ -241,7 +357,7 @@ function AddSpecialBids() {
               <Field label="Account Name & Account Number" required>
                 <Dropdown
                   onOptionSelect={handleParentIdChange}
-                  placeholder="Select a Parent"
+                  placeholder="Select a Partner"
                 >
                   {uniqueParentDetails?.map((option, index) => (
                     <Option
@@ -250,6 +366,9 @@ function AddSpecialBids() {
                     >{`${option?.accountName} (${option?.accountNumber})`}</Option>
                   ))}
                 </Dropdown>
+                {errors.accountName && (
+                  <div className="error-message">{errors.accountName}</div>
+                )}
               </Field>
             </div>
             <div>
@@ -281,7 +400,11 @@ function AddSpecialBids() {
           <GridShim columns={3} className="grid-shim">
             <div>
               <Field label="Special Bid Type">
-                <RadioGroup layout="horizontal" defaultValue="specialBid">
+                <RadioGroup
+                  layout="horizontal"
+                  defaultValue="specialBid"
+                  onChange={(event) => handleRadioChange(event, "specialBid")}
+                >
                   <Radio value="specialBid" label="Special Bid"></Radio>
                   <Radio value="dealLetter" label="Deal Letter"></Radio>
                 </RadioGroup>
@@ -289,7 +412,12 @@ function AddSpecialBids() {
             </div>
             <div>
               <Field label="Special Bid Name">
-                <Input onChange={handleInputChange} />
+                <Input
+                  onChange={(event) => {
+                    setSpecialBidName(event.target.value);
+                    handleInputChange();
+                  }}
+                />
               </Field>
             </div>
           </GridShim>
@@ -331,10 +459,30 @@ function AddSpecialBids() {
         <div className="card-product m-t-20">
           <div className="product">
             <h3>{headings.productsServices}</h3>
-            <Dialog open={isDialogOpen}>
+            <div className="m-t-10" onClick={handleOpenDialog}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                x="0px"
+                y="0px"
+                width="25"
+                height="25"
+                viewBox="0 0 50 50"
+                cursor="pointer"
+              >
+                <path d="M 25 2 C 12.309295 2 2 12.309295 2 25 C 2 37.690705 12.309295 48 25 48 C 37.690705 48 48 37.690705 48 25 C 48 12.309295 37.690705 2 25 2 z M 25 4 C 36.609824 4 46 13.390176 46 25 C 46 36.609824 36.609824 46 25 46 C 13.390176 46 4 36.609824 4 25 C 4 13.390176 13.390176 4 25 4 z M 24 13 L 24 24 L 13 24 L 13 26 L 24 26 L 24 37 L 26 37 L 26 26 L 37 26 L 37 24 L 26 24 L 26 13 L 24 13 z"></path>
+              </svg>
+            </div>
+            {isDialogOpen && (
+              <ProductModel
+                isOpen={isDialogOpen}
+                onClose={handleCloseDialog}
+                onSubmitData={onSubmitData}
+                partnerId={selectedParent}
+                parentDetails={uniqueParentDetails}
+              />
+            )}
+            {/* <Dialog open={isDialogOpen}>
               <DialogTrigger>
-                {/* <Button icon={<Add24Filled />} shape="circular"></Button> */}
-                {/* <button className="button">+</button> */}
                 <div className="m-t-10" onClick={toggleDialog}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -357,23 +505,11 @@ function AddSpecialBids() {
                   >
                     <ProductModel onSubmitData={onSubmitData} />
                   </DialogContent>
-                  {/* <DialogActions>
-                      <Button
-                        type="submit"
-                        appearance="primary"
-                        onClick={handleSubmit}
-                      >
-                        {headings.save}
-                      </Button>
-                    <DialogTrigger>
-                      <Button>{headings.cancel}</Button>
-                    </DialogTrigger>
-                  </DialogActions> */}
                 </DialogBody>
               </DialogSurface>
-            </Dialog>
+            </Dialog> */}
           </div>
-          <div className="m-l-10">
+          <div className="m-l-10 p-tb">
             {/* {products?.records && products?.records?.length > 0 ? (
               products?.records?.map((product) => { */}
             {modalData ? (
@@ -399,9 +535,11 @@ function AddSpecialBids() {
           <GridShim columns={3} className="grid-shim">
             <div>
               <Field label="Contract Term" required>
-                <Dropdown>
+                <Dropdown onOptionSelect={handleOptionChange}>
                   {options.map((option) => (
-                    <Option key={option}>{option}</Option>
+                    <Option key={option} value={option}>
+                      {option}
+                    </Option>
                   ))}
                 </Dropdown>
               </Field>
@@ -409,6 +547,9 @@ function AddSpecialBids() {
             <div>
               <Field label="Total Committed Quantity" required>
                 <Input value={totalQuantity > 0 ? totalQuantity : ""} />
+                {errors.quantity && (
+                  <div className="error-message">{errors.quantity}</div>
+                )}
               </Field>
             </div>
           </GridShim>
@@ -474,7 +615,10 @@ function AddSpecialBids() {
             </div>
             <div>
               <Field label="Rate Card">
-                <RadioGroup layout="horizontal">
+                <RadioGroup
+                  layout="horizontal"
+                  onChange={(event) => handleRadioChange(event, "rateCard")}
+                >
                   <Radio value="yes" label="yes"></Radio>
                   <Radio value="no" label="no"></Radio>
                 </RadioGroup>
@@ -487,14 +631,14 @@ function AddSpecialBids() {
           <Button
             type="submit"
             appearance="primary"
-            disabled={!isParentSelected || !isCustomerSelected}
+            // disabled={!isParentSelected || !isCustomerSelected}
           >
             {headings.saveDraft}
           </Button>
           <Button
             onClick={handleSubmit}
             appearance="primary"
-            disabled={!isParentSelected || !isCustomerSelected}
+            // disabled={!isParentSelected || !isCustomerSelected}
           >
             {headings.submitRequest}
           </Button>
