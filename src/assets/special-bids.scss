@@ -65,12 +65,28 @@ $common-width-large: 250px;
   padding: 0px 10px;
 }
 
+.v-data {
+  display: flex;
+  justify-content: space-between;
+}
+
 .t-c {
   padding: 10px 15px;
 }
 
 .p-tb {
   padding: 10px 0px 40px;
+}
+.v-tb {
+  padding: 10px 0px 10px;
+}
+
+.m-20 {
+  margin: 20px;
+}
+
+.m-tb-20{
+  margin: 20px 0px;
 }
 
 .m-t-10 {
@@ -87,6 +103,14 @@ $common-width-large: 250px;
 
 .m-l-10 {
   margin-left: 10px;
+}
+
+.p-tb-20 {
+  padding: 10px 0px 20px;
+}
+
+.m-l-20 {
+  margin-left: 20px;
 }
 
 .m-lr-10 {
@@ -164,4 +188,22 @@ $common-width-large: 250px;
   font-weight: 600;
 }
 
+.d-flex {
+  display: flex;
+  flex-direction: column;
+}
+
+.c-gap{
+  display: flex;
+  column-gap: 180px;
+}
+
+.border-top {
+  border-top: 2px solid gainsboro;
+margin-top: 20px;
+}
+
+.text-color {
+  color: #01527f;
+}
 

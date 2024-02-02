@@ -13,19 +13,8 @@ import {
   Subtitle1,
   Textarea,
   Option,
-  Dialog,
-  DialogTrigger,
-  DialogSurface,
-  DialogBody,
-  DialogContent,
-  DialogActions,
 } from "@fluentui/react-components";
-import {
-  Add24Filled,
-  ArrowLeft24Regular,
-  DeleteRegular,
-  EditRegular,
-} from "@fluentui/react-icons";
+import { ArrowLeft24Regular } from "@fluentui/react-icons";
 import { useNavigate } from "react-router-dom";
 import { GridShim } from "@fluentui/react-migration-v0-v9";
 import ProductModel from "./product-model";
@@ -35,7 +24,6 @@ import {
   useGetCustomerStructureQuery,
 } from "../../store/usersApi";
 import headingsData from "../common/json-data";
-import { useDispatch } from "react-redux";
 import { useMsal } from "@azure/msal-react";
 import { loginRequest } from "../../core/settings/authconfig";
 import { callMsGraph } from "../../core/settings/graph";
@@ -58,7 +46,6 @@ function AddSpecialBids() {
   const [customerName, setCustomerName] = useState();
   const [selectedAccount, setSelectedAccount] = useState(null);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const [addSpecialBids, isLoading] = useAddSpecialBidsMutation();
   const { data: customers } = useGetCustomerStructureQuery();
   // console.log(customers);
@@ -72,6 +59,8 @@ function AddSpecialBids() {
   const [selectedRateCard, setSelectedRateCard] = useState();
   const [selectedSpecialBid, setSelectedSpecialBid] = useState();
   const [specialBidName, setSpecialBidName] = useState("");
+  const [requestedName, setRequestedName] = useState("");
+  const [requestedEmail, setRequestedEmail] = useState("");
 
   const [errors, setErrors] = useState({
     accountName: "",
@@ -83,9 +72,16 @@ function AddSpecialBids() {
     let tempErrors = { ...errors };
     tempErrors.accountName = selectedAccount ? "" : "Account name is required ";
     tempErrors.quantity = totalQuantity ? "" : "Total quantity is required";
-
+    tempErrors.requestedEmail = validateEmail(requestedEmail)
+      ? ""
+      : "Invalid email address";
     setErrors(tempErrors);
     return Object.values(tempErrors).every((x) => x === "");
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
   const handleTotalQuantityChange = (newTotal) => {
@@ -94,7 +90,7 @@ function AddSpecialBids() {
 
   const handleAddProduct = (newProduct) => {
     setProduct([...product, newProduct]);
-    toggleDialog(); // Close the dialog after adding the product
+    toggleDialog();
   };
   const handleLastPage = () => {
     navigate(`/specialBids`);
@@ -213,11 +209,6 @@ function AddSpecialBids() {
 
   const handleSubmit = async () => {
     if (!validate()) return;
-    // const newBid = {
-    //   uniqueKey: customers?.records?.accountName,
-    //   partnerName: customers?.records?.partnerName,
-    // };
-    // console.log(newBid);
     let subscriberId = selectedAccount?.match(/\(([^)]+)\)/)[1];
     let subscriberName = selectedAccount
       ?.replace(/\s*\([^)]*\)\s*/g, "")
@@ -227,28 +218,31 @@ function AddSpecialBids() {
       subscriberId: subscriberId,
       subscriberName: subscriberName,
       partnerName: selectedSubscriber,
+      accountNumber: customers?.records?.accountNumber,
       products: modalData?.map((product) => ({
         productId: product?.id,
         availabilityType: headings.country,
         availabilityName: product?.country,
         communicationPlatform: product?.productName,
+        productDescription: product?.productDescription,
         serviceLocations: product?.location,
         quantity: product?.quantity,
         planId: product?.planId,
-        pricing: product?.pricing?.map((price) => ({
-          pricingId: price?.id,
-          requestPrice: price?.requestPrice,
+        productName: product?.productName,
+        productCode: product?.productCode,
+        pricing: product?.chargeName?.map((price) => ({
+          pricingId: product?.id,
+          requestPrice: product?.requestedPrice,
+          plan_activation: product?.plan_activation,
+          platform: product?.platform,
+          chargeName: price?.chargeName,
+          buyingPrice: price?.buyingPrice,
         })),
         comments: product.comments,
       })),
       collaborators: [
         {
           key: "PartnerContactPerson",
-          name: userName,
-          email: userEmail,
-        },
-        {
-          key: "PartnerSigningAuthority",
           name: userName,
           email: userEmail,
         },
@@ -273,6 +267,8 @@ function AddSpecialBids() {
       specialBidNotes: "",
       specialBidType: selectedSpecialBid,
       specialBidName: specialBidName,
+      requestedName: requestedName,
+      requestedEmail: requestedEmail,
     };
 
     console.log("formData....", formData);
@@ -287,16 +283,8 @@ function AddSpecialBids() {
     navigate(`/specialBids`);
   };
 
-  // const customerOptions = customers?.records?.map((customer) => ({
-  //   key: customer?.id,
-  //   text: `${customer?.accountName} - ${customer?.accountNumber}`,
-  // }));
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [modalData, setModalData] = useState([]);
-
-  // const toggleDialog = () => {
-  //   setIsDialogOpen(!isDialogOpen);
-  // };
 
   const handleOpenDialog = () => {
     setIsDialogOpen(true);
@@ -431,17 +419,31 @@ function AddSpecialBids() {
           <GridShim columns={3} className="grid-shim">
             <div>
               <Field label="Request Prepared by" required>
-                <Input />
+                <Input value={userEmail} onChange={handleEmailChange} />
               </Field>
             </div>
             <div>
               <Field label="Partner Point of Contact Name" required>
-                <Input value={userName} onChange={handleNameChange} />
+                <Input
+                  onChange={(event) => {
+                    setRequestedName(event.target.value);
+                    handleInputChange();
+                  }}
+                />
               </Field>
             </div>
             <div>
               <Field label="Partner Point of Contact Email" required>
-                <Input value={userEmail} onChange={handleEmailChange} />
+                <Input
+                  type="email"
+                  onChange={(event) => {
+                    setRequestedEmail(event.target.value);
+                    handleInputChange();
+                  }}
+                />
+                {errors.requestedEmail && (
+                  <div className="error-message">{errors.requestedEmail}</div>
+                )}
               </Field>
             </div>
             {/* <div>
@@ -481,37 +483,8 @@ function AddSpecialBids() {
                 parentDetails={uniqueParentDetails}
               />
             )}
-            {/* <Dialog open={isDialogOpen}>
-              <DialogTrigger>
-                <div className="m-t-10" onClick={toggleDialog}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    x="0px"
-                    y="0px"
-                    width="25"
-                    height="25"
-                    viewBox="0 0 50 50"
-                    cursor="pointer"
-                  >
-                    <path d="M 25 2 C 12.309295 2 2 12.309295 2 25 C 2 37.690705 12.309295 48 25 48 C 37.690705 48 48 37.690705 48 25 C 48 12.309295 37.690705 2 25 2 z M 25 4 C 36.609824 4 46 13.390176 46 25 C 46 36.609824 36.609824 46 25 46 C 13.390176 46 4 36.609824 4 25 C 4 13.390176 13.390176 4 25 4 z M 24 13 L 24 24 L 13 24 L 13 26 L 24 26 L 24 37 L 26 37 L 26 26 L 37 26 L 37 24 L 26 24 L 26 13 L 24 13 z"></path>
-                  </svg>
-                </div>
-              </DialogTrigger>
-              <DialogSurface className="dialog-wide">
-                <DialogBody className="d-body">
-                  <DialogContent
-                    onAddProduct={handleAddProduct}
-                    className="db-w"
-                  >
-                    <ProductModel onSubmitData={onSubmitData} />
-                  </DialogContent>
-                </DialogBody>
-              </DialogSurface>
-            </Dialog> */}
           </div>
           <div className="m-l-10 p-tb">
-            {/* {products?.records && products?.records?.length > 0 ? (
-              products?.records?.map((product) => { */}
             {modalData ? (
               <ProductTable
                 productData={modalData}
@@ -520,10 +493,6 @@ function AddSpecialBids() {
             ) : (
               <p>{headings.none}</p>
             )}
-            {/* })
-            ) : (
-              
-            )} */}
           </div>
         </div>
         <div className="m-t-20">
@@ -627,23 +596,13 @@ function AddSpecialBids() {
           </GridShim>
         </div>
         <hr className="hr" />
-        <div className="m-t-20 b-g">
-          <Button
-            type="submit"
-            appearance="primary"
-            // disabled={!isParentSelected || !isCustomerSelected}
-          >
+        <div className="m-t-20 m-b-20 b-g">
+          <Button type="submit" appearance="primary">
             {headings.saveDraft}
           </Button>
-          <Button
-            onClick={handleSubmit}
-            appearance="primary"
-            // disabled={!isParentSelected || !isCustomerSelected}
-          >
+          <Button onClick={handleSubmit} appearance="primary">
             {headings.submitRequest}
           </Button>
-          {/* <Button disabled={!isFormModified}>Save Draft</Button>
-        <Button disabled={!isFormModified}>Submit Request</Button> */}
           <Button onClick={handleLastPage}>{headings.cancel}</Button>
         </div>
       </div>

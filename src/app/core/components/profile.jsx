@@ -10,6 +10,7 @@ import {
   ArrowLeft24Regular,
   ChevronLeft24Regular,
 } from "@fluentui/react-icons";
+import AppBreadcrumbs from "../../pages/common/bread-crumbs";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -83,6 +84,7 @@ const Profile = () => {
   return (
     <div className="table">
       <div className="header-view">
+    <AppBreadcrumbs />
         <Button
           icon={<ArrowLeft24Regular />}
           appearance="transparent"

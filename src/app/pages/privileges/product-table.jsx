@@ -79,8 +79,9 @@ const ProductTable = ({ productData, onTotalQuantityChange }) => {
                     </TableCell>
                     <TableCell>
                       <div>
-                        {obj.productName}
-                        <span>{obj.productCode}</span>
+                        <Text weight="semibold" className="text-color">
+                          {obj.productName} ({obj.productCode})
+                        </Text>
                       </div>
                       <div>
                         {headings.country}:{" "}

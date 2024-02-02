@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/rules-of-hooks */
-
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import {
   Button,
@@ -55,6 +54,7 @@ const ProductModel = ({
     requestedPrice: "",
     productName: "",
     productCode: "",
+    productDescription: "",
   });
   const { headings } = headingsData.en;
   const {
@@ -145,13 +145,9 @@ const ProductModel = ({
       chargeName: plainTypeData[0]?.pricing,
       productName: additionalFields.productName,
       productCode: additionalFields.productCode,
-      //   productData,
-      //   plainTypeData,
-      //   filteredProducts,
-      //   selectedProduct,
-      //   additionalFields,
+      productDescription: additionalFields.productDescription,
     };
-    // console.log("Submitting data:", submissionData);
+    console.log("Submitting data:", submissionData);
     onSubmitData(submissionData);
   };
 

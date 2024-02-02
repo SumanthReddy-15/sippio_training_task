@@ -30,11 +30,33 @@
   // border: solid 2px gainsboro;
   padding: 10px 20px;
   max-height: calc(
-    100vh - 200px
+    100vh - 203px
   );
   overflow-y: auto;
-  margin-top: 10px;
-  height: 70vh;
+  // margin-top: 10px;
+  height: 75vh;
+}
+.table-view {
+  // border: solid 2px gainsboro;
+  max-height: calc(
+    100vh - 183px
+  );
+  overflow-y: auto;
+  // margin-top: 10px;
+  height: 74vh;
+}
+
+.table-sb {
+  max-height: calc(
+    100vh - 195px
+  );
+  overflow-y: auto;
+  // margin-top: 10px;
+  height: 73vh;
+}
+
+.v-table-p {
+  padding: 10px 20px;
 }
 
 .dialog-table {
@@ -54,7 +76,7 @@
 .border {
   border: 2px solid gainsboro;
   margin: 0px 20px;
-  height: 86%;
+  height: 81vh;
   // width: 100%;
 }
 
@@ -132,7 +154,7 @@
 
 .routesMain {
   display: flex;
-  height: 97vh;
+  height: 100vh;
   overflow-x: auto;
 }
 

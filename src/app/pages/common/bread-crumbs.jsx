@@ -33,13 +33,15 @@ function AppBreadcrumbs() {
         },
       ];
     } else if (path.includes("specialBids/") && path.includes("/view")) {
+      const id = path.split("/")[2];
       return [
         { text: "Special Bids", key: "specialBids", onClick: navigateBack },
+        { text: `${id}`},
         { text: "View", key: "view", isCurrentItem: true },
       ];
     } else if (path === "/specialBids/add") {
       return [
-        { text: "Special Bids", key: "specialBids", onClick: navigateBack, },
+        { text: "Special Bids", key: "specialBids", onClick: navigateBack },
         {
           text: "Add ",
           key: "add",

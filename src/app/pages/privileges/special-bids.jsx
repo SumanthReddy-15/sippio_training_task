@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import {
   Button,
@@ -31,6 +32,7 @@ import headingsData from "../common/json-data";
 import { callMsGraph } from "../../core/settings/graph";
 import { useMsal } from "@azure/msal-react";
 import { loginRequest } from "../../core/settings/authconfig";
+import moment from "moment";
 
 const SpecialBids = () => {
   const { accounts, instance } = useMsal();
@@ -40,7 +42,7 @@ const SpecialBids = () => {
     isLoading,
     refetch: refetchBidsData,
   } = useGetSpecialBidsQuery();
-  // console.log(specialBidsData);
+  console.log(specialBidsData);
   const [
     deleteSpecialBids,
     { isLoading: isDeleteLoading, error: deleteError },
@@ -100,18 +102,18 @@ const SpecialBids = () => {
 
   const userName = userData.displayName;
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const options = {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    };
-    return date.toLocaleDateString("en-US", options);
-  };
+  // const formatDate = (dateString) => {
+  //   const date = new Date(dateString);
+  //   const options = {
+  //     year: "numeric",
+  //     month: "short",
+  //     day: "numeric",
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //     second: "2-digit",
+  //   };
+  //   return date.toLocaleDateString("en-US", options);
+  // };
 
   const toCapitalizedWords = (str) => {
     return (
@@ -153,13 +155,15 @@ const SpecialBids = () => {
         </div>
       </div>
       <hr className="hr" />
-      <div className="table">
+      <div className="table-sb">
         <Table>
           {specialBidsData?.records?.length > 0 && (
             <TableHeader>
               <TableRow>
                 <TableHeaderCell className="partner-account-name">
-                  <Text weight="bold">{headings.partnerAccountName}</Text>
+                  <Text weight="bold" className="m-tb-20">
+                    {headings.partnerAccountName}
+                  </Text>
                 </TableHeaderCell>
                 <TableHeaderCell className="subscriber-account-name">
                   <Text weight="bold">{headings.SubscriberAccountName}</Text>
@@ -194,15 +198,13 @@ const SpecialBids = () => {
 
           <TableBody>
             {showLoading ? (
-              <TableRow>
-                <TableCell colSpan={2} align="center">
-                  <Spinner
-                    label="Loading..."
-                    size="small"
-                    style={{ margin: "100px 450px" }}
-                  />
-                </TableCell>
-              </TableRow>
+              <div>
+                <Spinner
+                  label="Loading..."
+                  size="small"
+                  style={{ margin: "200px 500px" }}
+                />
+              </div>
             ) : specialBidsData?.records?.length ? (
               specialBidsData?.records?.map((bid) => {
                 return (
@@ -222,7 +224,9 @@ const SpecialBids = () => {
                       {" "}
                       {bid.subscriberId ? bid.subscriberId : "-"}{" "}
                     </TableCell>
-                    <TableCell>{bid.bidNumber ? bid.bidNumber : "-"}</TableCell>
+                    <TableCell>
+                      {bid.createTimestamp ? bid.createTimestamp : "-"}
+                    </TableCell>
                     <TableCell>
                       {bid.specialBidName ? bid.specialBidName : "-"}
                     </TableCell>
@@ -234,8 +238,10 @@ const SpecialBids = () => {
                     </TableCell>
                     <TableCell>
                       {" "}
-                      {bid.estimatedStartDate
-                        ? formatDate(bid.estimatedStartDate)
+                      {bid.createTimestamp
+                        ? moment(bid.createTimestamp).format(
+                            "MMM DD, YYYY HH:mm:ss"
+                          )
                         : "-"}{" "}
                     </TableCell>
                     <TableCell>{bid.status ? bid.status : "-"}</TableCell>
@@ -249,11 +255,17 @@ const SpecialBids = () => {
                     <TableCell>
                       <div className="b-g">
                         <Tooltip content="View" relationship="label">
-                          <Button
-                            icon={<EyeRegular className="i-color" />}
-                            aria-label="View"
-                            appearance="transparent"
-                          />
+                          <Link
+                            to={{
+                              pathname: `/specialBids/${bid.id}/view`,
+                            }}
+                          >
+                            <Button
+                              icon={<EyeRegular className="i-color" />}
+                              aria-label="View"
+                              appearance="transparent"
+                            />
+                          </Link>
                         </Tooltip>
                         <Tooltip content="Edit" relationship="label">
                           <Button
