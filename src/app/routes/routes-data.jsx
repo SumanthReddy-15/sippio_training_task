@@ -5,6 +5,7 @@ import SpecialBids from "../pages/privileges/special-bids";
 import Profile from "../core/components/profile";
 import AddSpecialBids from "../pages/privileges/add-special-bids";
 import ViewSpecialBids from "../pages/privileges/view-special-bids";
+import EditSpecialBids from "../pages/privileges/edit-special- bids";
 
 const RoutesData = () => {
   const routeElements = [
@@ -21,6 +22,11 @@ const RoutesData = () => {
     {
       path: "/specialBids/add",
       component: AddSpecialBids,
+      props: {},
+    },
+    {
+      path: "/specialBids/:id/edit",
+      component: EditSpecialBids,
       props: {},
     },
     {

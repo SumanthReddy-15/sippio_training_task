@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import {
@@ -37,6 +38,8 @@ const ProductModel = ({
   onSubmitData,
   partnerId,
   parentDetails,
+  modalData,
+  modelStatus,
 }) => {
   const [selectedCountry, setSelectedCountry] = useState("");
   const [productData, setProductData] = useState();
@@ -45,7 +48,16 @@ const ProductModel = ({
   const [selectedRadio, setSelectedRadio] = useState();
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
-
+  const DEFAULT_ADDITIONAL_DATA = {
+    platform: "",
+    quantity: "",
+    locations: "",
+    comments: "",
+    requestedPrice: "",
+    productName: "",
+    productCode: "",
+    productDescription: "",
+  };
   const [additionalFields, setAdditionalFields] = useState({
     platform: "",
     quantity: "",
@@ -87,20 +99,8 @@ const ProductModel = ({
 
   const handleCountrySelect = (event, country) => {
     const newSelectedCountry = country?.optionValue;
-    // console.log(
-    //   country?.optionValue,
-    //   newSelectedCountry,
-    //   event.target.textContent
-    // );
-
     setSelectedCountry(newSelectedCountry);
     setProgressBarActive(true);
-
-    // Only refetch if newSelectedCountry is valid (non-null, non-empty)
-    // if (newSelectedCountry) {
-    //   refetch();
-    // }
-
     setTimeout(() => setProgressBarActive(false), 3000);
     setSelectedProduct(null);
     setFilteredProducts([]);
@@ -110,12 +110,23 @@ const ProductModel = ({
   };
 
   const handleProductSelect = (event, product) => {
-    // console.log(event);
     const selectProduct = product?.optionValue;
-    // console.log(selectProduct);
     setSelectedProduct(selectProduct);
-    setProductData(selectProduct);
-    setAdditionalFields(selectProduct);
+    console.log(selectProduct, "selectProduct");
+    const result = selectProduct?.substring(
+      0,
+      selectProduct?.indexOf(" (") !== -1
+        ? selectProduct?.indexOf(" (")
+        : selectProduct?.length
+    );
+
+    let data = products?.records?.filter((obj) => {
+      return obj.productName === result;
+    });
+    console.log(result, selectProduct, data);
+
+    setProductData(data[0]);
+    setAdditionalFields(data[0]);
   };
 
   const onPlanChange = (event) => {
@@ -124,13 +135,14 @@ const ProductModel = ({
     let data = productData?.planTypes?.filter((obj) => {
       return obj.planName?.toLowerCase() === selectedPlan;
     });
-    // console.log(data);
     setPlainTypeData(data);
   };
 
   const handleFieldChange = (field, value) => {
     setAdditionalFields((prev) => ({ ...prev, [field]: value }));
   };
+
+  const [submissionDataArray, setSubmissionDataArray] = useState([]);
 
   const handleSubmit = () => {
     const submissionData = {
@@ -142,11 +154,28 @@ const ProductModel = ({
       platform: additionalFields.platform,
       quantity: additionalFields.quantity,
       requestedPrice: additionalFields.requestedPrice,
+      buyingPrice: "",
       chargeName: plainTypeData[0]?.pricing,
       productName: additionalFields.productName,
       productCode: additionalFields.productCode,
       productDescription: additionalFields.productDescription,
     };
+
+    // setSubmissionDataArray((prevArray) => [...prevArray, submissionData]);
+    // console.log("Submitting data:", submissionData);
+    // onSubmitData(submissionData);
+    // Check if partnerId is null, then create a new entry
+    if (partnerId === null) {
+      setSubmissionDataArray((prevArray) => [...prevArray, submissionData]);
+    } else {
+      // Update the existing entry based on partnerId
+      setSubmissionDataArray((prevArray) =>
+        prevArray.map((entry) =>
+          entry.id === partnerId ? { ...entry, ...submissionData } : entry
+        )
+      );
+    }
+
     console.log("Submitting data:", submissionData);
     onSubmitData(submissionData);
   };
@@ -167,6 +196,57 @@ const ProductModel = ({
     );
   };
 
+  useEffect(() => {
+    const isAdditionalFieldsEqualDefault =
+      additionalFields.platform === DEFAULT_ADDITIONAL_DATA.platform &&
+      additionalFields.quantity === DEFAULT_ADDITIONAL_DATA.quantity &&
+      additionalFields.locations === DEFAULT_ADDITIONAL_DATA.locations &&
+      additionalFields.comments === DEFAULT_ADDITIONAL_DATA.comments &&
+      additionalFields.requestedPrice ===
+        DEFAULT_ADDITIONAL_DATA.requestedPrice &&
+      additionalFields.productName === DEFAULT_ADDITIONAL_DATA.productName &&
+      additionalFields.productCode === DEFAULT_ADDITIONAL_DATA.productCode &&
+      additionalFields.productDescription ===
+        DEFAULT_ADDITIONAL_DATA.productDescription;
+    console.log(
+      "modalData && isAdditionalFieldsEqualDefault",
+      modalData && isAdditionalFieldsEqualDefault
+    );
+    if (modalData && isAdditionalFieldsEqualDefault) {
+      const productData = {
+        productName: modalData.productName,
+        productCode: modalData.productCode,
+      };
+      const uniquePlainTypes = [
+        ...new Set(modalData.plan_activation?.split(", ")),
+      ].join(", ");
+      const uniquePlatform = [...new Set(modalData.platform?.split(", "))].join(
+        ", "
+      );
+
+      const plainTypes = [{ pricing: modalData.chargeName }];
+      console.log("plainTypes...", plainTypes);
+      setSelectedCountry(modalData.country);
+      setProductData(productData?.productName);
+      setSelectedProduct(productData?.productName);
+      setSelectedRadio(uniquePlainTypes);
+      setPlainTypeData(plainTypes);
+      setAdditionalFields({
+        platform: uniquePlatform,
+        quantity: modalData.quantity,
+        locations: modalData.location,
+        comments: modalData.comments,
+        requestedPrice: modalData.requestedPrice,
+        productName: modalData.productName,
+        productCode: modalData.productCode,
+        productDescription: modalData.productDescription,
+      });
+      // setIsEditMode(!!modalData.id);
+    } else {
+      // setIsEditMode(false);
+    }
+  }, [modalData]);
+
   const renderAdditionalFields = () => {
     if (selectedRadio === "activation" || selectedRadio === "porting") {
       return (
@@ -175,7 +255,11 @@ const ProductModel = ({
             <GridShim columns={3} className="grid-shim">
               <div>
                 <Field label="Platform" required>
-                  <Dropdown onOptionSelect={handlePlatformChange}>
+                  <Dropdown
+                    onOptionSelect={handlePlatformChange}
+                    defaultValue={additionalFields.platform}
+                    disabled={modelStatus === "edit" ? true : false}
+                  >
                     {productData &&
                       productData?.communicationPlatforms?.map((obj, i) => (
                         <Option key={i} textContent={obj.name}>
@@ -188,6 +272,7 @@ const ProductModel = ({
               <div>
                 <Field label="Quantity" required>
                   <Input
+                    defaultValue={additionalFields.quantity}
                     onChange={(e) =>
                       handleFieldChange("quantity", e.target.value)
                     }
@@ -197,6 +282,7 @@ const ProductModel = ({
               <div>
                 <Field label="Locations" required>
                   <Input
+                    defaultValue={additionalFields.locations}
                     onChange={(e) =>
                       handleFieldChange("locations", e.target.value)
                     }
@@ -227,13 +313,24 @@ const ProductModel = ({
                 {plainTypeData && plainTypeData[0]?.pricing?.length > 0 ? (
                   plainTypeData[0].pricing.map((obj, i) => {
                     return (
-                      obj?.buyingPrice !== 0 && (
+                      obj?.buyingPrice !== 0 &&
+                      obj?.buyingPrice !== "" && (
                         <TableRow key={i}>
-                          <TableCell>{obj?.chargeType}</TableCell>
-                          <TableCell>{obj?.chargeName}</TableCell>
-                          <TableCell>${obj?.buyingPrice.toFixed(2)}</TableCell>
+                          <TableCell>
+                            {obj?.chargeType ? obj?.chargeType : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {obj?.chargeName ? obj?.chargeName : "-"}
+                          </TableCell>
+                          <TableCell>
+                            $
+                            {obj?.buyingPrice
+                              ? obj?.buyingPrice.toFixed(2)
+                              : "-"}
+                          </TableCell>
                           <TableCell>
                             <Input
+                              defaultValue={obj?.requestPrice}
                               onChange={(e) =>
                                 handleFieldChange(
                                   "requestedPrice",
@@ -260,6 +357,7 @@ const ProductModel = ({
           <div className="m-t-20">
             <Field label="Comments">
               <Textarea
+                defaultValue={additionalFields.comments}
                 onChange={(e) => handleFieldChange("comments", e.target.value)}
                 resize="both"
                 placeholder="Please provide your comments here"
@@ -305,6 +403,7 @@ const ProductModel = ({
                             <Dropdown
                               onOptionSelect={handleCountrySelect}
                               value={selectedCountry}
+                              disabled={modelStatus === "edit" ? true : false}
                             >
                               {countries.map((country) => (
                                 <Option key={country} textContent={country}>
@@ -314,18 +413,16 @@ const ProductModel = ({
                             </Dropdown>
                           </Field>
                         </div>
-                        {/* </GridShim> */}
-                        {/* <GridShim columns={3} className="grid-shim m-l-10"> */}
                         <div>
                           <Field label="Product / Service" required>
                             <Dropdown
-                              disabled={!selectedCountry}
-                              onOptionSelect={handleProductSelect}
-                              value={
-                                selectedProduct
-                                  ? selectedProduct.productName
-                                  : ""
+                              disabled={
+                                !selectedCountry || modelStatus === "edit"
+                                  ? true
+                                  : false
                               }
+                              onOptionSelect={handleProductSelect}
+                              value={selectedProduct}
                             >
                               {filteredProducts?.map((product) => (
                                 <Option
@@ -341,7 +438,7 @@ const ProductModel = ({
                                     product?.productCode +
                                     ")"
                                   }
-                                  value={product}
+                                  // value={product}
                                 >
                                   {product?.productName +
                                     " (" +
@@ -352,13 +449,14 @@ const ProductModel = ({
                             </Dropdown>
                           </Field>
                         </div>
-                        {/* </GridShim> */}
                         {selectedProduct && (
                           <div>
                             <Field label="Plan / Connection" required>
                               <RadioGroup
                                 layout="horizontal"
+                                defaultValue={selectedRadio}
                                 onChange={(event) => onPlanChange(event)}
+                                disabled={modelStatus === "edit" ? true : false}
                               >
                                 <Radio
                                   value="activation"

@@ -29,6 +29,8 @@ import { loginRequest } from "../../core/settings/authconfig";
 import { callMsGraph } from "../../core/settings/graph";
 import ProductTable from "./product-table";
 import { DatePicker } from "@fluentui/react-datepicker-compat";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const options = [
   "12 months",
@@ -207,7 +209,7 @@ function AddSpecialBids() {
     ? new Date(startDate.getTime() + 86400000)
     : null;
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (processStatus) => {
     if (!validate()) return;
     let subscriberId = selectedAccount?.match(/\(([^)]+)\)/)[1];
     let subscriberName = selectedAccount
@@ -218,7 +220,9 @@ function AddSpecialBids() {
       subscriberId: subscriberId,
       subscriberName: subscriberName,
       partnerName: selectedSubscriber,
+      subscriber: selectedAccount,
       accountNumber: customers?.records?.accountNumber,
+      processStatus: processStatus,
       products: modalData?.map((product) => ({
         productId: product?.id,
         availabilityType: headings.country,
@@ -263,7 +267,6 @@ function AddSpecialBids() {
       ],
       attachments: [],
       notifications: [],
-      processStatus: "",
       specialBidNotes: "",
       specialBidType: selectedSpecialBid,
       specialBidName: specialBidName,
@@ -275,12 +278,13 @@ function AddSpecialBids() {
 
     try {
       await addSpecialBids(formData).unwrap();
+      toast.success("Special Bid added successfully!");
       navigate(`/specialBids`);
     } catch (error) {
       console.error("Error submitting form:", error);
     }
 
-    navigate(`/specialBids`);
+    // navigate(`/specialBids`);
   };
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -481,6 +485,8 @@ function AddSpecialBids() {
                 onSubmitData={onSubmitData}
                 partnerId={selectedParent}
                 parentDetails={uniqueParentDetails}
+                modalData={null}
+                modelStatus={"add"}
               />
             )}
           </div>
@@ -597,10 +603,17 @@ function AddSpecialBids() {
         </div>
         <hr className="hr" />
         <div className="m-t-20 m-b-20 b-g">
-          <Button type="submit" appearance="primary">
+          <Button
+            onClick={() => handleSubmit("Draft")}
+            type="submit"
+            appearance="primary"
+          >
             {headings.saveDraft}
           </Button>
-          <Button onClick={handleSubmit} appearance="primary">
+          <Button
+            onClick={() => handleSubmit("Request Created")}
+            appearance="primary"
+          >
             {headings.submitRequest}
           </Button>
           <Button onClick={handleLastPage}>{headings.cancel}</Button>

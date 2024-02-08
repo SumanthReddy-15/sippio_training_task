@@ -26,13 +26,13 @@ $common-width-large: 250px;
 .subscriber-account-name,
 .special-bid-number,
 .created-date,
+.status,
 .subscriber-account-number {
   @extend %width-medium;
 }
 
 .name,
 .type,
-.status,
 .user,
 .actions {
   @extend %width-small;
@@ -206,4 +206,5 @@ margin-top: 20px;
 .text-color {
   color: #01527f;
 }
+
 

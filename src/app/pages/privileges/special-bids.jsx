@@ -33,6 +33,7 @@ import { callMsGraph } from "../../core/settings/graph";
 import { useMsal } from "@azure/msal-react";
 import { loginRequest } from "../../core/settings/authconfig";
 import moment from "moment";
+import { ToastContainer } from "react-toastify";
 
 const SpecialBids = () => {
   const { accounts, instance } = useMsal();
@@ -58,7 +59,7 @@ const SpecialBids = () => {
     try {
       const response = await deleteSpecialBids(id).unwrap();
       console.log("Delete response:", response);
-      refetchBidsData();
+      await refetchBidsData();
     } catch (error) {
       console.error("Failed to delete special bid", error);
     }
@@ -127,6 +128,7 @@ const SpecialBids = () => {
 
   return (
     <div className="border">
+      <ToastContainer />
       <div className="table-header">
         <AppBreadcrumbs />
         <div className="h-b">
@@ -225,7 +227,11 @@ const SpecialBids = () => {
                       {bid.subscriberId ? bid.subscriberId : "-"}{" "}
                     </TableCell>
                     <TableCell>
-                      {bid.createTimestamp ? bid.createTimestamp : "-"}
+                      {bid.createTimestamp
+                        ? bid.createTimestamp
+                        : bid.modifyTimestamp
+                        ? bid.modifyTimestamp
+                        : "-"}
                     </TableCell>
                     <TableCell>
                       {bid.specialBidName ? bid.specialBidName : "-"}
@@ -242,9 +248,15 @@ const SpecialBids = () => {
                         ? moment(bid.createTimestamp).format(
                             "MMM DD, YYYY HH:mm:ss"
                           )
+                        : bid.modifyTimestamp
+                        ? moment(bid.modifyTimestamp).format(
+                            "MMM DD, YYYY HH:mm:ss"
+                          )
                         : "-"}{" "}
                     </TableCell>
-                    <TableCell>{bid.status ? bid.status : "-"}</TableCell>
+                    <TableCell>
+                      <Text>{bid.processStatus ? bid.processStatus : "-"}</Text>
+                    </TableCell>
                     <TableCell>
                       <Tooltip content={userName} relationship="label">
                         <TableCellLayout truncate>
@@ -268,11 +280,17 @@ const SpecialBids = () => {
                           </Link>
                         </Tooltip>
                         <Tooltip content="Edit" relationship="label">
-                          <Button
-                            icon={<EditRegular className="i-color" />}
-                            aria-label="Edit"
-                            appearance="transparent"
-                          />
+                          <Link
+                            to={{
+                              pathname: `/specialBids/${bid.id}/edit`,
+                            }}
+                          >
+                            <Button
+                              icon={<EditRegular className="i-color" />}
+                              aria-label="Edit"
+                              appearance="transparent"
+                            />
+                          </Link>
                         </Tooltip>
                         <Tooltip content="Delete" relationship="label">
                           <Button

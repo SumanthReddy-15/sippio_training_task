@@ -23,8 +23,12 @@ function AppBreadcrumbs() {
         },
       ];
     } else if (path.includes("specialBids/") && path.includes("/edit")) {
+      const id = path.split("/")[2];
+
       return [
-        { text: "Special Bids", key: "home", onClick: navigateBack },
+        { text: "Special Bids", key: "specialBids", onClick: navigateBack },
+        { text: `${id}` },
+
         {
           text: "Edit",
           key: "editUser",
@@ -36,7 +40,7 @@ function AppBreadcrumbs() {
       const id = path.split("/")[2];
       return [
         { text: "Special Bids", key: "specialBids", onClick: navigateBack },
-        { text: `${id}`},
+        { text: `${id}` },
         { text: "View", key: "view", isCurrentItem: true },
       ];
     } else if (path === "/specialBids/add") {

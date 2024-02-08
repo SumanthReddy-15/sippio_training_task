@@ -121,9 +121,10 @@ export const usersApi = createApi({
         }),
       }),
       postPrivileges: build.mutation({
-        query: () => ({
+        query: (privilegeData) => ({
           url: "/api/v1/privileges",
           method: "post",
+          data: privilegeData, // Add this line to send privilegeData in the request body
           invalidatesTags: ["Privileges"],
         }),
       }),
@@ -163,9 +164,10 @@ export const usersApi = createApi({
         }),
       }),
       updateSpecialBids: build.mutation({
-        query: () => ({
-          url: "/api/v1/special-bids/${id}",
+        query: ({ id, ...formData }) => ({
+          url: `/api/v1/special-bids/${id}`,
           method: "put",
+          data: formData,
         }),
       }),
       deleteSpecialBids: build.mutation({

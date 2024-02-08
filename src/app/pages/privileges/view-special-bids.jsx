@@ -70,7 +70,8 @@ const ViewSpecialBids = () => {
                   </div>
                   <div>
                     <p>
-                      {headings.status}: {data?.status ? data?.status : "-"}{" "}
+                      {headings.status}:{" "}
+                      {data?.processStatus ? data?.processStatus : "-"}{" "}
                     </p>
                   </div>
                   {data?.collaborators?.map((bid, i) => (
@@ -84,6 +85,10 @@ const ViewSpecialBids = () => {
                         {headings.modifiedOn}{" "}
                         {data?.createTimestamp
                           ? moment(bid.createTimestamp).format(
+                              "MMM DD, YYYY HH:mm:ss"
+                            )
+                          : data?.modifyTimestamp
+                          ? moment(bid.modifyTimestamp).format(
                               "MMM DD, YYYY HH:mm:ss"
                             )
                           : "-"}
@@ -131,9 +136,7 @@ const ViewSpecialBids = () => {
                         <Text> {headings.accountName} </Text>
                         <Text weight="semibold" className="m-t-10">
                           {" "}
-                          {data?.collaborators?.name
-                            ? data?.collaborators?.name
-                            : "-"}
+                          {data?.specialBidName ? data?.specialBidName : "-"}
                         </Text>
                       </div>
                     </GridShim>
@@ -254,7 +257,13 @@ const ViewSpecialBids = () => {
                                   <Text>{price?.chargeName}</Text>
                                 </TableCell>
                                 <TableCell>
-                                  <Text>${price?.buyingPrice.toFixed(2)}</Text>
+                                  <Text>
+                                    {price?.buyingPrice
+                                      ? `$${parseFloat(
+                                          price?.buyingPrice
+                                        ).toFixed(2)}`
+                                      : "-"}
+                                  </Text>
                                 </TableCell>
                                 <TableCell>
                                   <Text>
