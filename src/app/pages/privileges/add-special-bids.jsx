@@ -235,7 +235,7 @@ function AddSpecialBids() {
         productName: product?.productName,
         productCode: product?.productCode,
         pricing: product?.chargeName?.map((price) => ({
-          pricingId: product?.id,
+          pricingId: price?.pricingId,
           requestPrice: product?.requestedPrice,
           plan_activation: product?.plan_activation,
           platform: product?.platform,
@@ -274,7 +274,7 @@ function AddSpecialBids() {
       requestedEmail: requestedEmail,
     };
 
-    console.log("formData....", formData);
+    // console.log("formData....", formData);
 
     try {
       await addSpecialBids(formData).unwrap();

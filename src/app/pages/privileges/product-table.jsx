@@ -25,7 +25,7 @@ const ProductTable = ({
   parentDetails,
 }) => {
   const { id } = useParams();
-  console.log("productData..........", productData);
+  // console.log("productData..........", productData);
   const { data: specialBidsData } = useGetSpecialBidsByIdQuery(id);
   const { headings } = headingsData.en;
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -45,23 +45,11 @@ const ProductTable = ({
   }, [productData, onTotalQuantityChange]);
 
   const handleEditClick = (product) => {
+    // console.log("handleEditClick", product);
     setSelectedProductForEdit(product);
     handleOpenDialog();
+    // console.log("product.....", product);
   };
-
-  const memoizedProductModel = useMemo(() => {
-    return (
-      <ProductModel
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        onSubmitData={onSubmitData}
-        partnerId={partnerId}
-        parentDetails={parentDetails}
-        // selectedProductForEdit={selectedProductForEdit}
-        modalData={selectedProductForEdit}
-      />
-    );
-  }, [isDialogOpen, selectedProductForEdit, modalData]);
 
   return (
     <div>
@@ -183,7 +171,6 @@ const ProductTable = ({
                           ))}
                     </TableCell>
                     <TableCell>
-                      <div>{""}</div>
                       <div>
                         {obj?.requestedPrice
                           ? `$${parseFloat(obj?.requestedPrice).toFixed(2)}`

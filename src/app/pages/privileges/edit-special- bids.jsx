@@ -52,7 +52,7 @@ function EditSpecialBids() {
   const [endDate, setEndDate] = useState(null);
   const { data: specialBidsData, isLoading } = useGetSpecialBidsByIdQuery(id);
   const [editSpecialBid] = useUpdateSpecialBidsMutation(id);
-  console.log(specialBidsData);
+  // console.log(specialBidsData);
   const navigate = useNavigate();
   const { data: customers } = useGetCustomerStructureQuery();
   const { data: products } = useGetProductsQuery();
@@ -138,7 +138,7 @@ function EditSpecialBids() {
       ...prevFormData,
       [field]: e.target.value,
     }));
-    console.log("After update:", formData);
+    // console.log("After update:", formData);
     setIsFormModified(true);
   };
 
@@ -317,25 +317,26 @@ function EditSpecialBids() {
   };
 
   const [formData, setFormData] = useState(DEFAULT_FORM_VALUES);
-  console.log(formData);
+  // console.log(formData);
 
   useEffect(() => {
     if (specialBidsData) {
       assignProductsData();
+      // console.log("test binding the data");
     }
   }, [specialBidsData]);
 
   const assignProductsData = async () => {
     const transformedData =
       (await specialBidsData) &&
-      specialBidsData?.result?.map((item) => ({
+      specialBidsData?.result?.map((item, index) => ({
         partnerId: item.partnerId || "",
         subscriberId: item.subscriberId || "",
         subscriberName: item.subscriberName || "",
         partnerName: item.partnerName || "",
         accountNumber: "",
         processStatus: item.processStatus || "",
-        products: item.products.map((product) => ({
+        products: item.products.map((product, innerIndex) => ({
           productId: product.productId || "",
           availabilityType: product.availabilityType || "",
           availabilityName: product.availabilityName || "",
@@ -355,6 +356,7 @@ function EditSpecialBids() {
             buyingPrice: price.buyingPrice || "",
           })),
           comments: product.comments || "",
+          renderId: index * item.products.length + innerIndex,
         })),
         collaborators: item.collaborators.map((collaborator) => ({
           key: collaborator.key || "",
@@ -382,13 +384,13 @@ function EditSpecialBids() {
         requestedEmail: item.requestedEmail || "",
       }));
 
-    console.log("transformedData.......", transformedData[0]);
+    // console.log("transformedData.......", transformedData[0]);
     const clonedData = JSON.parse(JSON.stringify(transformedData));
     await setFormData(clonedData[0]);
     const modelData =
       (await specialBidsData) &&
-      specialBidsData?.result?.map((item) => {
-        return item.products.map((product) => {
+      specialBidsData?.result?.map((item, index) => {
+        return item.products.map((product, innerIndex) => {
           const platform = product.pricing
             .filter((price) => price?.buyingPrice !== 0)
             .map((price) => price.platform)
@@ -422,14 +424,12 @@ function EditSpecialBids() {
             productName: product.productName || "",
             productCode: product.productCode || "",
             productDescription: product.productDescription || "",
+            renderId: index * item.products.length + innerIndex,
           };
         });
       });
     const newData = await [...modalData, modelData[0]];
-    console.log("modelData........", modelData);
-    console.log("newData........", newData[0]);
     const finalData = await newData[0];
-    // console.log("add-special-bid.js----newData", data);
     await setModalData(finalData);
   };
 
@@ -450,10 +450,7 @@ function EditSpecialBids() {
       }
 
       const editedData = { id, ...formData, progressStatus };
-      console.log("editedData__editedData", editedData);
-
       await editSpecialBid(editedData).unwrap();
-      // navigate(`/specialBids`);
     } catch (error) {
       console.error("Error submitting the form:", error);
     }
@@ -462,7 +459,9 @@ function EditSpecialBids() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [modalData, setModalData] = useState([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
+  useEffect(() => {
+    console.log("Updated modalData:", modalData);
+  }, [modalData]);
   const handleOpenDialog = () => {
     setIsDialogOpen(true);
   };
@@ -471,22 +470,84 @@ function EditSpecialBids() {
     setIsDialogOpen(false);
   };
 
-  const onSubmitData = (data) => {
-    // Find the index of the item in modalData with the same id
-    const index = modalData.findIndex((item) => item.id === data.id);
+  const onSubmitData = async (data) => {
+    const index = await modalData.filter(
+      (item) => item.renderId === data.renderId
+    );
+    if (index.length === 1) {
+      const updatedData = await modalData.map((item, i) =>
+        i === data.renderId ? data : item
+      );
+      await setModalData([]);
+      await setModalData(updatedData);
 
-    // If the id is found, update the existing object
-    if (index !== -1) {
-      const updatedData = [...modalData];
-      updatedData[index] = { ...updatedData[index], ...data };
-      setModalData(updatedData);
+      const updatedFormData = {
+        ...formData,
+        products: formData.products.map((product) => {
+          if (product.renderId === data.renderId) {
+            return {
+              ...product,
+              availabilityType: "Country",
+              availabilityName: data.country,
+              communicationPlatform: [{ name: data.platform }],
+              productDescription: data.productDescription,
+              serviceLocations: data.location,
+              quantity: data.quantity,
+              planId: "",
+              productName: data.productName,
+              productCode: data.productCode,
+              pricing: data.chargeName.map((price) => ({
+                pricingId: price.pricingId,
+                requestPrice: price.requestPrice,
+                plan_activation: price.plan_activation,
+                platform: price.platform,
+                chargeName: price.chargeName,
+                buyingPrice: price.buyingPrice,
+              })),
+              comments: data.comments,
+            };
+          }
+          return product;
+        }),
+      };
+      setFormData(updatedFormData);
     } else {
-      // If the id is not found, add a new object to the array
-      const newData = [...modalData, data];
-      setModalData(newData);
+      await setModalData([]);
+      const newData = await [...modalData, data];
+      await setModalData(newData);
+
+      const updatedFormData = {
+        ...formData,
+        products: [
+          ...formData.products,
+          {
+            availabilityType: "Country",
+            availabilityName: data.country,
+            communicationPlatform: [{ name: data.platform }],
+            productDescription: data.productDescription,
+            serviceLocations: data.location,
+            quantity: data.quantity,
+            planId: "",
+            productName: data.productName,
+            productCode: data.productCode,
+            pricing: data.chargeName.map((price) => ({
+              pricingId: price.pricingId,
+              requestPrice: price.requestPrice,
+              plan_activation: price.plan_activation,
+              platform: price.platform,
+              chargeName: price.chargeName,
+              buyingPrice: price.buyingPrice,
+            })),
+            comments: data.comments,
+          },
+        ],
+      };
+
+      setFormData(updatedFormData);
     }
 
-    handleCloseDialog();
+
+    await setIsDialogOpen(false);
   };
 
   const handleRadioChange = (event, name) => {
@@ -634,7 +695,7 @@ function EditSpecialBids() {
                     isOpen={isDialogOpen}
                     onClose={handleCloseDialog}
                     onSubmitData={onSubmitData}
-                    partnerId={selectedParent}
+                    partnerId={data?.partnerId}
                     parentDetails={uniqueParentDetails}
                     modalData={modalData}
                     modelStatus={"add"}
@@ -645,6 +706,7 @@ function EditSpecialBids() {
                 {data?.products && data?.products?.length > 0 ? (
                   <ProductTable
                     productData={modalData}
+                    onClose={handleCloseDialog}
                     onTotalQuantityChange={handleTotalQuantityChange}
                     onSubmitData={onSubmitData}
                     partnerId={selectedParent}

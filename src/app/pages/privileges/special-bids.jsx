@@ -43,7 +43,7 @@ const SpecialBids = () => {
     isLoading,
     refetch: refetchBidsData,
   } = useGetSpecialBidsQuery();
-  console.log(specialBidsData);
+  // console.log(specialBidsData);
   const [
     deleteSpecialBids,
     { isLoading: isDeleteLoading, error: deleteError },
@@ -55,10 +55,10 @@ const SpecialBids = () => {
   const showLoading = customLoading || isDeleteLoading;
 
   const handleDelete = async (id) => {
-    console.log("Deleting ID:", id);
+    // console.log("Deleting ID:", id);
     try {
       const response = await deleteSpecialBids(id).unwrap();
-      console.log("Delete response:", response);
+      // console.log("Delete response:", response);
       await refetchBidsData();
     } catch (error) {
       console.error("Failed to delete special bid", error);

@@ -41,6 +41,7 @@ const ProductModel = ({
   modalData,
   modelStatus,
 }) => {
+  // console.log(partnerId);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [productData, setProductData] = useState();
   const [progressBarActive, setProgressBarActive] = useState(false);
@@ -112,7 +113,7 @@ const ProductModel = ({
   const handleProductSelect = (event, product) => {
     const selectProduct = product?.optionValue;
     setSelectedProduct(selectProduct);
-    console.log(selectProduct, "selectProduct");
+    // console.log(selectProduct, "selectProduct");
     const result = selectProduct?.substring(
       0,
       selectProduct?.indexOf(" (") !== -1
@@ -123,7 +124,7 @@ const ProductModel = ({
     let data = products?.records?.filter((obj) => {
       return obj.productName === result;
     });
-    console.log(result, selectProduct, data);
+    // console.log(result, selectProduct, data);
 
     setProductData(data[0]);
     setAdditionalFields(data[0]);
@@ -142,8 +143,6 @@ const ProductModel = ({
     setAdditionalFields((prev) => ({ ...prev, [field]: value }));
   };
 
-  const [submissionDataArray, setSubmissionDataArray] = useState([]);
-
   const handleSubmit = () => {
     const submissionData = {
       id: partnerId,
@@ -159,24 +158,10 @@ const ProductModel = ({
       productName: additionalFields.productName,
       productCode: additionalFields.productCode,
       productDescription: additionalFields.productDescription,
+      renderId: modalData?.renderId,
     };
 
-    // setSubmissionDataArray((prevArray) => [...prevArray, submissionData]);
     // console.log("Submitting data:", submissionData);
-    // onSubmitData(submissionData);
-    // Check if partnerId is null, then create a new entry
-    if (partnerId === null) {
-      setSubmissionDataArray((prevArray) => [...prevArray, submissionData]);
-    } else {
-      // Update the existing entry based on partnerId
-      setSubmissionDataArray((prevArray) =>
-        prevArray.map((entry) =>
-          entry.id === partnerId ? { ...entry, ...submissionData } : entry
-        )
-      );
-    }
-
-    console.log("Submitting data:", submissionData);
     onSubmitData(submissionData);
   };
 
@@ -208,10 +193,7 @@ const ProductModel = ({
       additionalFields.productCode === DEFAULT_ADDITIONAL_DATA.productCode &&
       additionalFields.productDescription ===
         DEFAULT_ADDITIONAL_DATA.productDescription;
-    console.log(
-      "modalData && isAdditionalFieldsEqualDefault",
-      modalData && isAdditionalFieldsEqualDefault
-    );
+
     if (modalData && isAdditionalFieldsEqualDefault) {
       const productData = {
         productName: modalData.productName,
@@ -225,7 +207,7 @@ const ProductModel = ({
       );
 
       const plainTypes = [{ pricing: modalData.chargeName }];
-      console.log("plainTypes...", plainTypes);
+      // console.log("plainTypes...", plainTypes);
       setSelectedCountry(modalData.country);
       setProductData(productData?.productName);
       setSelectedProduct(productData?.productName);
