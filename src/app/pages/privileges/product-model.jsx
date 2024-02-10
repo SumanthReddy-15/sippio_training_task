@@ -25,6 +25,7 @@ import {
   TableRow,
   Text,
   Textarea,
+  Spinner,
 } from "@fluentui/react-components";
 import { Dismiss24Filled } from "@fluentui/react-icons";
 import { GridShim } from "@fluentui/react-migration-v0-v9";
@@ -42,6 +43,7 @@ const ProductModel = ({
   modelStatus,
 }) => {
   // console.log(partnerId);
+  const [showLoading, setShowLoading] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [productData, setProductData] = useState();
   const [progressBarActive, setProgressBarActive] = useState(false);
@@ -182,19 +184,16 @@ const ProductModel = ({
   };
 
   useEffect(() => {
-    const isAdditionalFieldsEqualDefault =
-      additionalFields.platform === DEFAULT_ADDITIONAL_DATA.platform &&
-      additionalFields.quantity === DEFAULT_ADDITIONAL_DATA.quantity &&
-      additionalFields.locations === DEFAULT_ADDITIONAL_DATA.locations &&
-      additionalFields.comments === DEFAULT_ADDITIONAL_DATA.comments &&
-      additionalFields.requestedPrice ===
-        DEFAULT_ADDITIONAL_DATA.requestedPrice &&
-      additionalFields.productName === DEFAULT_ADDITIONAL_DATA.productName &&
-      additionalFields.productCode === DEFAULT_ADDITIONAL_DATA.productCode &&
-      additionalFields.productDescription ===
-        DEFAULT_ADDITIONAL_DATA.productDescription;
+    const modelzone = typeof modalData === "object" && modalData !== null;
 
-    if (modalData && isAdditionalFieldsEqualDefault) {
+    // console.log(
+    //   "modelzone......",
+    //   modelzone,
+    //   modelStatus === "edit",
+    //   modalData && modelStatus === "edit"
+    // );
+    if (modelzone && modelStatus === "edit") {
+      setShowLoading(true);
       const productData = {
         productName: modalData.productName,
         productCode: modalData.productCode,
@@ -205,6 +204,9 @@ const ProductModel = ({
       const uniquePlatform = [...new Set(modalData.platform?.split(", "))].join(
         ", "
       );
+      const uniqueRequestedPrice = [
+        ...new Set(modalData.requestedPrice?.split(", ")),
+      ].join(", ");
 
       const plainTypes = [{ pricing: modalData.chargeName }];
       // console.log("plainTypes...", plainTypes);
@@ -218,16 +220,17 @@ const ProductModel = ({
         quantity: modalData.quantity,
         locations: modalData.location,
         comments: modalData.comments,
-        requestedPrice: modalData.requestedPrice,
+        requestedPrice: uniqueRequestedPrice,
         productName: modalData.productName,
         productCode: modalData.productCode,
         productDescription: modalData.productDescription,
       });
       // setIsEditMode(!!modalData.id);
+      setShowLoading(false);
     } else {
       // setIsEditMode(false);
     }
-  }, [modalData]);
+  }, [modalData, modelStatus]);
 
   const renderAdditionalFields = () => {
     if (selectedRadio === "activation" || selectedRadio === "porting") {
@@ -239,7 +242,7 @@ const ProductModel = ({
                 <Field label="Platform" required>
                   <Dropdown
                     onOptionSelect={handlePlatformChange}
-                    defaultValue={additionalFields.platform}
+                    value={additionalFields.platform}
                     disabled={modelStatus === "edit" ? true : false}
                   >
                     {productData &&
@@ -254,7 +257,7 @@ const ProductModel = ({
               <div>
                 <Field label="Quantity" required>
                   <Input
-                    defaultValue={additionalFields.quantity}
+                    value={additionalFields.quantity}
                     onChange={(e) =>
                       handleFieldChange("quantity", e.target.value)
                     }
@@ -264,7 +267,7 @@ const ProductModel = ({
               <div>
                 <Field label="Locations" required>
                   <Input
-                    defaultValue={additionalFields.locations}
+                    value={additionalFields.locations}
                     onChange={(e) =>
                       handleFieldChange("locations", e.target.value)
                     }
@@ -312,7 +315,7 @@ const ProductModel = ({
                           </TableCell>
                           <TableCell>
                             <Input
-                              defaultValue={obj?.requestPrice}
+                              value={obj?.requestPrice}
                               onChange={(e) =>
                                 handleFieldChange(
                                   "requestedPrice",
@@ -339,7 +342,7 @@ const ProductModel = ({
           <div className="m-t-20">
             <Field label="Comments">
               <Textarea
-                defaultValue={additionalFields.comments}
+                value={additionalFields.comments}
                 onChange={(e) => handleFieldChange("comments", e.target.value)}
                 resize="both"
                 placeholder="Please provide your comments here"
@@ -360,119 +363,134 @@ const ProductModel = ({
     <>
       <Dialog open={isOpen}>
         <DialogSurface>
-          <DialogBody>
-            <DialogTitle>
-              <div className="p-grid p-grid-bg">
-                {headings.addProductService}
-                <DialogTrigger disableButtonEnhancement>
-                  <Button
-                    icon={<Dismiss24Filled />}
-                    appearance="transparent"
-                    onClick={closeDialog}
-                  />
-                </DialogTrigger>
-              </div>
-            </DialogTitle>
-            <DialogContent>
-              <div className="db-w">
-                {renderProgressBar()}
-                <div className="dialog-data">
-                  <div className="m-t-10 ">
-                    <div>
-                      <GridShim columns={3} className="grid-shim">
-                        <div>
-                          <Field label="Countries" required>
-                            <Dropdown
-                              onOptionSelect={handleCountrySelect}
-                              value={selectedCountry}
-                              disabled={modelStatus === "edit" ? true : false}
-                            >
-                              {countries.map((country) => (
-                                <Option key={country} textContent={country}>
-                                  {country}
-                                </Option>
-                              ))}
-                            </Dropdown>
-                          </Field>
-                        </div>
-                        <div>
-                          <Field label="Product / Service" required>
-                            <Dropdown
-                              disabled={
-                                !selectedCountry || modelStatus === "edit"
-                                  ? true
-                                  : false
-                              }
-                              onOptionSelect={handleProductSelect}
-                              value={selectedProduct}
-                            >
-                              {filteredProducts?.map((product) => (
-                                <Option
-                                  key={
-                                    product?.productName +
-                                    "( " +
-                                    product?.productCode +
-                                    ")"
-                                  }
-                                  textContent={
-                                    product?.productName +
-                                    " (" +
-                                    product?.productCode +
-                                    ")"
-                                  }
-                                  // value={product}
-                                >
-                                  {product?.productName +
-                                    " (" +
-                                    product?.productCode +
-                                    ")"}
-                                </Option>
-                              ))}
-                            </Dropdown>
-                          </Field>
-                        </div>
-                        {selectedProduct && (
+          {showLoading ? (
+            <div>
+              <Spinner
+                label="Loading..."
+                size="small"
+                style={{ margin: "200px 500px" }}
+              />
+            </div>
+          ) : (
+            <DialogBody>
+              <DialogTitle>
+                <div className="p-grid p-grid-bg">
+                  {headings.addProductService}
+                  <DialogTrigger disableButtonEnhancement>
+                    <Button
+                      icon={<Dismiss24Filled />}
+                      appearance="transparent"
+                      onClick={closeDialog}
+                    />
+                  </DialogTrigger>
+                </div>
+              </DialogTitle>
+              <DialogContent>
+                <div className="db-w">
+                  {renderProgressBar()}
+                  <div className="dialog-data">
+                    <div className="m-t-10 ">
+                      <div>
+                        <GridShim columns={3} className="grid-shim">
                           <div>
-                            <Field label="Plan / Connection" required>
-                              <RadioGroup
-                                layout="horizontal"
-                                defaultValue={selectedRadio}
-                                onChange={(event) => onPlanChange(event)}
+                            <Field label="Countries" required>
+                              <Dropdown
+                                onOptionSelect={handleCountrySelect}
+                                value={selectedCountry}
                                 disabled={modelStatus === "edit" ? true : false}
                               >
-                                <Radio
-                                  value="activation"
-                                  label="Activation"
-                                ></Radio>
-                                <Radio value="porting" label="Porting"></Radio>
-                              </RadioGroup>
+                                {countries.map((country) => (
+                                  <Option key={country} textContent={country}>
+                                    {country}
+                                  </Option>
+                                ))}
+                              </Dropdown>
                             </Field>
                           </div>
-                        )}
-                      </GridShim>
+                          <div>
+                            <Field label="Product / Service" required>
+                              <Dropdown
+                                disabled={
+                                  !selectedCountry || modelStatus === "edit"
+                                    ? true
+                                    : false
+                                }
+                                onOptionSelect={handleProductSelect}
+                                value={selectedProduct}
+                              >
+                                {filteredProducts?.map((product) => (
+                                  <Option
+                                    key={
+                                      product?.productName +
+                                      "( " +
+                                      product?.productCode +
+                                      ")"
+                                    }
+                                    textContent={
+                                      product?.productName +
+                                      " (" +
+                                      product?.productCode +
+                                      ")"
+                                    }
+                                    // value={product}
+                                  >
+                                    {product?.productName +
+                                      " (" +
+                                      product?.productCode +
+                                      ")"}
+                                  </Option>
+                                ))}
+                              </Dropdown>
+                            </Field>
+                          </div>
+                          {selectedProduct && (
+                            <div>
+                              <Field label="Plan / Connection" required>
+                                <RadioGroup
+                                  layout="horizontal"
+                                  value={selectedRadio}
+                                  onChange={(event) => onPlanChange(event)}
+                                  disabled={
+                                    modelStatus === "edit" ? true : false
+                                  }
+                                >
+                                  <Radio
+                                    value="activation"
+                                    label="Activation"
+                                  ></Radio>
+                                  <Radio
+                                    value="porting"
+                                    label="Porting"
+                                  ></Radio>
+                                </RadioGroup>
+                              </Field>
+                            </div>
+                          )}
+                        </GridShim>
+                      </div>
+                      {renderAdditionalFields()}
                     </div>
-                    {renderAdditionalFields()}
                   </div>
                 </div>
-              </div>
-            </DialogContent>
-            <DialogActions>
-              <div className="m-t-20 b-g">
-                <Button
-                  type="submit"
-                  appearance="primary"
-                  onClick={handleSubmit}
-                  disabled={!isSaveEnabled()}
-                >
-                  {headings.save}
-                </Button>
+              </DialogContent>
+              <DialogActions>
+                <div className="m-t-20 b-g">
+                  <Button
+                    type="submit"
+                    appearance="primary"
+                    onClick={handleSubmit}
+                    disabled={!isSaveEnabled()}
+                  >
+                    {headings.save}
+                  </Button>
 
-                <DialogTrigger disableButtonEnhancement>
-                  <Button onClick={closeDialog}>{headings.cancel}</Button>
-                </DialogTrigger>
-              </div>
-            </DialogActions>
-          </DialogBody>
+                  <DialogTrigger disableButtonEnhancement>
+                    <Button onClick={closeDialog}>{headings.cancel}</Button>
+                  </DialogTrigger>
+                </div>
+              </DialogActions>
+            </DialogBody>
+          )}
         </DialogSurface>
       </Dialog>
     </>

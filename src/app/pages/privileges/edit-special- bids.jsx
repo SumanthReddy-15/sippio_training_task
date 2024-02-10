@@ -403,7 +403,13 @@ function EditSpecialBids() {
 
           const plan_activation = product.pricing
             .filter((price) => price?.buyingPrice !== 0)
-            .map((price) => price.plan_activation)
+            .map((price) =>
+              price.plan_activation
+                ? price.plan_activation
+                : price.plan_activation === ""
+                ? "porting"
+                : ""
+            )
             .join(", ");
 
           const buyingPrice = product.pricing
@@ -545,7 +551,6 @@ function EditSpecialBids() {
 
       setFormData(updatedFormData);
     }
-
 
     await setIsDialogOpen(false);
   };

@@ -189,6 +189,9 @@ const ProductTable = ({
       )}
       {
         <ProductModel
+          key={
+            selectedProductForEdit?.id || selectedProductForEdit?.productName
+          }
           isOpen={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
           onSubmitData={onSubmitData}

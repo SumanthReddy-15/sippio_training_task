@@ -82,11 +82,12 @@ import axios from "axios";
 
 // export default usersApi.reducer;}
 
-const headers = { authorization: localStorage.getItem("loginToken") };
 const axiosBaseQuery =
   ({ baseUrl } = { baseUrl: "http://localhost:5000" }) =>
   async ({ url, method, data, providesTags, invalidatesTags }) => {
     try {
+      const idToken = await localStorage.getItem("loginToken");
+      const headers = await { authorization: idToken };
       const result = await axios({
         url: baseUrl + url,
         method,

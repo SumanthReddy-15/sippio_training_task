@@ -23,12 +23,12 @@ const Authenticate = () => {
       await instance.initialize();
       await instance
         .handleRedirectPromise()
-        .then((res) => {
+        .then(async (res) => {
           setdata(res);
           console.log(res);
-          localStorage.setItem("loginToken", res?.accessToken);
+          await localStorage.setItem("loginToken", res?.accessToken);
           if (res) {
-            navigate("/");
+            await navigate("/");
           }
         })
         .catch((e) => {

@@ -57,7 +57,7 @@ const SpecialBids = () => {
   const handleDelete = async (id) => {
     // console.log("Deleting ID:", id);
     try {
-      const response = await deleteSpecialBids(id).unwrap();
+      await deleteSpecialBids(id).unwrap();
       // console.log("Delete response:", response);
       await refetchBidsData();
     } catch (error) {
