@@ -28,9 +28,9 @@
 
 .table {
   // border: solid 2px gainsboro;
-  padding: 10px 20px;
+  // padding: 10px 20px;
   max-height: calc(
-    100vh - 203px
+    100vh - 174px
   );
   overflow-y: auto;
   // margin-top: 10px;
@@ -76,8 +76,13 @@
 .border {
   border: 2px solid gainsboro;
   margin: 0px 20px;
-  height: 81vh;
+  height: 83vh;
   // width: 100%;
+}
+.view-border {
+  border: 2px solid gainsboro;
+  margin: 0px 20px;
+  height: 81vh;
 }
 
 .table-2 {

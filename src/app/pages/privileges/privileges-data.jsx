@@ -1,46 +1,69 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import AppBreadcrumbs from "../common/bread-crumbs";
 import {
   useGetPrivilegesQuery,
   usePostPrivilegesMutation,
 } from "../../store/usersApi";
-import { Checkbox } from "@fluentui/react-components";
+import { Button, Checkbox } from "@fluentui/react-components";
 
 const PrivilegesData = () => {
-  const { data: privileges } = useGetPrivilegesQuery();
-  const postPrivilegesMutation = usePostPrivilegesMutation();
+  const initialPrivileges = [
+    { partCode: "SBR-ADD", description: "", isChecked: false },
+    { partCode: "SBR-VIW", description: "", isChecked: false },
+    { partCode: "SBR-EDT", description: "", isChecked: false },
+    { partCode: "SBR-DEL", description: "", isChecked: false },
+  ];
 
-  const handleCheckboxChange = async (partCode, isChecked) => {
-    const updatedPrivileges = privileges.records.map((privilege) => ({
-      partCode: privilege.partCode,
-      privilegeStatus:
-        privilege.partCode === partCode
-          ? isChecked
-            ? 1
-            : 0
-          : privilege.privilegeStatus,
-    }));
+  const [privileges, setPrivileges] = useState(initialPrivileges);
+  const { data: privilegesData, isSuccess } = useGetPrivilegesQuery();
+  const [postPrivileges, { isSuccess: isPostSuccess, isError: isPostError }] =
+    usePostPrivilegesMutation();
 
+  useEffect(() => {
+    if (isSuccess && privilegesData?.records) {
+      const updatedPrivileges = privileges.map((privilege) => ({
+        ...privilege,
+        isChecked: privilegesData.records.includes(privilege.partCode),
+      }));
+
+      setPrivileges(updatedPrivileges);
+    }
+  }, [privilegesData, isSuccess]);
+
+  const handleCheckboxChange = (partCode) => {
+    const updatedPrivileges = privileges.map((privilege) => {
+      if (privilege.partCode === partCode) {
+        return { ...privilege, isChecked: !privilege.isChecked };
+      }
+      return privilege;
+    });
+
+    setPrivileges(updatedPrivileges);
+  };
+
+  const getCheckedPrivileges = () => {
+    return privileges
+      .filter((privilege) => privilege.isChecked)
+      .map((privilege) => privilege.partCode);
+  };
+
+  const handleSubmit = async () => {
+    const checkedPrivileges = getCheckedPrivileges();
+    console.log("checkedPrivileges", checkedPrivileges);
     try {
-      await postPrivilegesMutation.mutate(updatedPrivileges);
+      await postPrivileges({ privileges: checkedPrivileges });
     } catch (error) {
-      console.error("Error updating privileges:", error);
+      console.error("Error submitting form:", error);
     }
   };
 
   const renderCheckboxes = () => {
-    if (!privileges || !privileges.records) {
-      return null;
-    }
-
-    return privileges.records.map((privilege) => (
+    return privileges.map((privilege, index) => (
       <Checkbox
-        key={privilege.partCode}
+        key={index}
         label={privilege.partCode}
-        defaultChecked={privilege.privilegeStatus === 1}
-        onChange={(e, isChecked) =>
-          handleCheckboxChange(privilege.partCode, isChecked)
-        }
+        checked={privilege.isChecked}
+        onChange={() => handleCheckboxChange(privilege.partCode)}
       />
     ));
   };
@@ -51,7 +74,10 @@ const PrivilegesData = () => {
         <AppBreadcrumbs />
       </div>
       <hr className="hr" />
-      <div className="header-view">{renderCheckboxes()}</div>
+      <div className="header-view">
+        {renderCheckboxes()}
+        <Button onClick={handleSubmit}>Submit Changes</Button>
+      </div>
     </div>
   );
 };

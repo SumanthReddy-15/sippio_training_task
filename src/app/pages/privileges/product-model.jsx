@@ -42,6 +42,7 @@ const ProductModel = ({
   modalData,
   modelStatus,
 }) => {
+  // console.log("modalData...", modalData);
   // console.log(partnerId);
   const [showLoading, setShowLoading] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -142,6 +143,7 @@ const ProductModel = ({
   };
 
   const handleFieldChange = (field, value) => {
+    // console.log("value......", value);
     setAdditionalFields((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -163,7 +165,7 @@ const ProductModel = ({
       renderId: modalData?.renderId,
     };
 
-    // console.log("Submitting data:", submissionData);
+    console.log("Submitting data:", submissionData);
     onSubmitData(submissionData);
   };
 
@@ -301,7 +303,7 @@ const ProductModel = ({
                       obj?.buyingPrice !== 0 &&
                       obj?.buyingPrice !== "" && (
                         <TableRow key={i}>
-                          <TableCell>
+                          <TableCell style={{ paddingTop: "20px" }}>
                             {obj?.chargeType ? obj?.chargeType : "-"}
                           </TableCell>
                           <TableCell>
@@ -315,7 +317,7 @@ const ProductModel = ({
                           </TableCell>
                           <TableCell>
                             <Input
-                              value={obj?.requestPrice}
+                              defaultValue={obj?.requestPrice}
                               onChange={(e) =>
                                 handleFieldChange(
                                   "requestedPrice",

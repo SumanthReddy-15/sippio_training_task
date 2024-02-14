@@ -23,6 +23,7 @@ const ProductTable = ({
   onSubmitData,
   partnerId,
   parentDetails,
+  handleDeleteClick,
 }) => {
   const { id } = useParams();
   // console.log("productData..........", productData);
@@ -49,6 +50,10 @@ const ProductTable = ({
     setSelectedProductForEdit(product);
     handleOpenDialog();
     // console.log("product.....", product);
+  };
+
+  const handleDelete = (product) => {
+    handleDeleteClick(product);
   };
 
   return (
@@ -84,7 +89,7 @@ const ProductTable = ({
             {productData &&
               productData.map((obj, i) => {
                 return (
-                  <TableRow key={i}>
+                  <TableRow key={i} className="m-t-10">
                     <TableCell>
                       <div className="b-g">
                         <Tooltip content="Edit" relationship="label">
@@ -100,6 +105,7 @@ const ProductTable = ({
                             icon={<DeleteRegular className="i-color" />}
                             aria-label="Delete"
                             appearance="transparent"
+                            onClick={() => handleDelete(obj)}
                           />
                         </Tooltip>
                       </div>

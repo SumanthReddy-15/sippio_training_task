@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 // eslint-disable-next-line no-unused-vars
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import AppBreadcrumbs from "../common/bread-crumbs";
 import "../../../assets/special-bids.scss";
 import {
@@ -13,6 +13,8 @@ import {
   Subtitle1,
   Textarea,
   Option,
+  MessageBar,
+  MessageBarBody,
 } from "@fluentui/react-components";
 import { ArrowLeft24Regular } from "@fluentui/react-icons";
 import { useNavigate } from "react-router-dom";
@@ -29,7 +31,7 @@ import { loginRequest } from "../../core/settings/authconfig";
 import { callMsGraph } from "../../core/settings/graph";
 import ProductTable from "./product-table";
 import { DatePicker } from "@fluentui/react-datepicker-compat";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const options = [
@@ -63,21 +65,58 @@ function AddSpecialBids() {
   const [specialBidName, setSpecialBidName] = useState("");
   const [requestedName, setRequestedName] = useState("");
   const [requestedEmail, setRequestedEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const [errors, setErrors] = useState({
-    accountName: "",
+    partnerDetails: "",
+    subscriberDetails: "",
     quantity: "",
-    specialBidsName: "",
+    contactName: "",
+    requestedEmail: "",
+    contractTerm: "",
   });
+  const inputRefs = {
+    partnerDetails: useRef(null),
+    subscriberDetails: useRef(null),
+    quantity: useRef(null),
+    requestedEmail: useRef(null),
+    contactName: useRef(null),
+    contractTerm: useRef(null),
+  };
 
   const validate = () => {
     let tempErrors = { ...errors };
-    tempErrors.accountName = selectedAccount ? "" : "Account name is required ";
+    tempErrors.partnerDetails = selectedSubscriber
+      ? ""
+      : "Partner Details is required ";
+    tempErrors.subscriberDetails = selectedAccount
+      ? ""
+      : "Subscriber Details is required ";
     tempErrors.quantity = totalQuantity ? "" : "Total quantity is required";
+    tempErrors.contactName = requestedName
+      ? ""
+      : "Partner Point of Contact Name is required";
     tempErrors.requestedEmail = validateEmail(requestedEmail)
       ? ""
       : "Invalid email address";
+    tempErrors.contractTerm = selectedOption ? "" : "Contract term is required";
     setErrors(tempErrors);
+    if (!selectedSubscriber) {
+      inputRefs.partnerDetails.current.focus();
+      // eslint-disable-next-line no-dupe-else-if
+    } else if (!selectedAccount) {
+      inputRefs.subscriberDetails.current.focus();
+    } else if (!requestedName) {
+      inputRefs.contactName.current.focus();
+    } else if (!validateEmail(requestedEmail)) {
+      inputRefs.requestedEmail.current.focus();
+    } else if (!selectedOption) {
+      inputRefs.contractTerm.current.focus();
+    } else if (!totalQuantity) {
+      inputRefs.quantity.current.focus();
+    }
+
     return Object.values(tempErrors).every((x) => x === "");
   };
 
@@ -274,17 +313,21 @@ function AddSpecialBids() {
       requestedEmail: requestedEmail,
     };
 
+    console.log("modalData", modalData);
+
     // console.log("formData....", formData);
-
-    try {
-      await addSpecialBids(formData).unwrap();
-      toast.success("Special Bid added successfully!");
-      navigate(`/specialBids`);
-    } catch (error) {
-      console.error("Error submitting form:", error);
-    }
-
-    // navigate(`/specialBids`);
+    setSubmitAttempted(true);
+    if (!validate() || modalData.length === 0) return;
+    addSpecialBids(formData)
+      .unwrap()
+      .then(() => {
+        toast.success("Special Bid added successfully!");
+        navigate(`/specialBids`);
+      })
+      .catch((error) => {
+        console.error("Error submitting form:", error);
+        toast.error("Failed to add Special Bid.");
+      });
   };
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -316,8 +359,17 @@ function AddSpecialBids() {
     }
   };
 
+  const handleDeleteClick = async (product) => {
+    const filteredModalData = modalData.filter(
+      (item) => item.renderId !== product?.renderId
+    );
+    // console.log("filteredModalData", filteredModalData);
+    await setModalData(filteredModalData);
+  };
+
   return (
     <div className="border">
+      <ToastContainer />
       <div className="table-header">
         <AppBreadcrumbs />
         <Button
@@ -329,7 +381,7 @@ function AddSpecialBids() {
       </div>
       <hr className="hr" />
       <div className="table">
-        <div>
+        <div className="a-sb-p">
           <GridShim columns={3} className="grid-shim">
             <div>
               <Subtitle1 weight="bold" size={400}>
@@ -343,13 +395,15 @@ function AddSpecialBids() {
             </div>
           </GridShim>
         </div>
-        <div className="m-t-10">
+        <div className="m-t-10 a-sb-p">
           <GridShim columns={3} className="grid-shim">
             <div>
               <Field label="Account Name & Account Number" required>
                 <Dropdown
                   onOptionSelect={handleParentIdChange}
                   placeholder="Select a Partner"
+                  className="dropdown-data"
+                  ref={inputRefs.partnerDetails}
                 >
                   {uniqueParentDetails?.map((option, index) => (
                     <Option
@@ -358,8 +412,8 @@ function AddSpecialBids() {
                     >{`${option?.accountName} (${option?.accountNumber})`}</Option>
                   ))}
                 </Dropdown>
-                {errors.accountName && (
-                  <div className="error-message">{errors.accountName}</div>
+                {errors.partnerDetails && (
+                  <div className="error-message">{errors.partnerDetails}</div>
                 )}
               </Field>
             </div>
@@ -369,6 +423,8 @@ function AddSpecialBids() {
                   onOptionSelect={(event) => handleAccountChange(event)}
                   placeholder="Select a Customer"
                   value={selectedAccount}
+                  className="dropdown-data"
+                  ref={inputRefs.subscriberDetails}
                 >
                   {customerName?.map((customer, index) => {
                     const uniqueKey = `${customer.accountName}-${customer.accountNumber}`;
@@ -379,16 +435,21 @@ function AddSpecialBids() {
                     );
                   })}
                 </Dropdown>
+                {errors.subscriberDetails && (
+                  <div className="error-message">
+                    {errors.subscriberDetails}
+                  </div>
+                )}
               </Field>
             </div>
           </GridShim>
         </div>
-        <div className="m-t-20">
+        <div className="m-t-20 a-sb-p">
           <Subtitle1 weight="bold" size={400}>
             {headings.specialBidsDetails}
           </Subtitle1>
         </div>
-        <div className="m-t-10">
+        <div className="m-t-10 a-sb-p">
           <GridShim columns={3} className="grid-shim">
             <div>
               <Field label="Special Bid Type">
@@ -414,16 +475,20 @@ function AddSpecialBids() {
             </div>
           </GridShim>
         </div>
-        <div className="m-t-20">
+        <div className="m-t-20 a-sb-p">
           <Subtitle1 weight="bold" size={400}>
             {headings.contactDetails}
           </Subtitle1>
         </div>
-        <div className="m-t-10">
+        <div className="m-t-10 a-sb-p">
           <GridShim columns={3} className="grid-shim">
             <div>
               <Field label="Request Prepared by" required>
-                <Input value={userEmail} onChange={handleEmailChange} />
+                <Input
+                  value={userEmail}
+                  onChange={handleEmailChange}
+                  disabled
+                />
               </Field>
             </div>
             <div>
@@ -433,7 +498,11 @@ function AddSpecialBids() {
                     setRequestedName(event.target.value);
                     handleInputChange();
                   }}
+                  ref={inputRefs.contactName}
                 />
+                {errors.contactName && (
+                  <div className="error-message">{errors.contactName}</div>
+                )}
               </Field>
             </div>
             <div>
@@ -444,9 +513,23 @@ function AddSpecialBids() {
                     setRequestedEmail(event.target.value);
                     handleInputChange();
                   }}
+                  onBlur={() => {
+                    const emailValue = inputRefs.requestedEmail.current.value;
+                    if (!emailValue) {
+                      setEmailError("Email is required");
+                    } else {
+                      const isValid = validateEmail(emailValue);
+                      if (!isValid) {
+                        setEmailError("Invalid email address");
+                      } else {
+                        setEmailError(""); // Clear the error if email is valid
+                      }
+                    }
+                  }}
+                  ref={inputRefs.requestedEmail}
                 />
-                {errors.requestedEmail && (
-                  <div className="error-message">{errors.requestedEmail}</div>
+                {emailError && (
+                  <div className="error-message">{emailError}</div>
                 )}
               </Field>
             </div>
@@ -462,7 +545,7 @@ function AddSpecialBids() {
           </div> */}
           </GridShim>
         </div>
-        <div className="card-product m-t-20">
+        <div className="card-product m-t-20 a-sb-m">
           <div className="product">
             <h3>{headings.productsServices}</h3>
             <div className="m-t-10" onClick={handleOpenDialog}>
@@ -494,34 +577,54 @@ function AddSpecialBids() {
             {modalData ? (
               <ProductTable
                 productData={modalData}
+                onClose={handleCloseDialog}
                 onTotalQuantityChange={handleTotalQuantityChange}
+                onSubmitData={onSubmitData}
+                partnerId={selectedParent}
+                parentDetails={uniqueParentDetails}
+                handleDeleteClick={handleDeleteClick}
               />
+            ) : submitAttempted ? (
+              <MessageBar>
+                <MessageBarBody>
+                  Please add at least one product before submitting.
+                </MessageBarBody>
+              </MessageBar>
             ) : (
               <p>{headings.none}</p>
             )}
           </div>
         </div>
-        <div className="m-t-20">
+        <div className="m-t-20 a-sb-p">
           <Subtitle1 weight="bold" size={400}>
             {headings.contractDetails}
           </Subtitle1>
         </div>
-        <div className="m-t-10">
+        <div className="m-t-10 a-sb-p">
           <GridShim columns={3} className="grid-shim">
             <div>
               <Field label="Contract Term" required>
-                <Dropdown onOptionSelect={handleOptionChange}>
+                <Dropdown
+                  onOptionSelect={handleOptionChange}
+                  ref={inputRefs.contractTerm}
+                >
                   {options.map((option) => (
                     <Option key={option} value={option}>
                       {option}
                     </Option>
                   ))}
                 </Dropdown>
+                {errors.contractTerm && (
+                  <div className="error-message">{errors.contractTerm}</div>
+                )}
               </Field>
             </div>
             <div>
               <Field label="Total Committed Quantity" required>
-                <Input value={totalQuantity > 0 ? totalQuantity : ""} />
+                <Input
+                  value={totalQuantity > 0 ? totalQuantity : ""}
+                  ref={inputRefs.quantity}
+                />
                 {errors.quantity && (
                   <div className="error-message">{errors.quantity}</div>
                 )}
@@ -549,12 +652,12 @@ function AddSpecialBids() {
             </div>
           </GridShim>
         </div>
-        <div className="m-t-20">
+        <div className="m-t-20 a-sb-p">
           <Field label="Comments/Requirements">
             <Textarea resize="vertical"></Textarea>
           </Field>
         </div>
-        <div className="card-product m-t-20">
+        <div className="card-product m-t-20 a-sb-m">
           <div className="product">
             <h3>{headings.attachments}</h3>
             {/* <Button icon={<Add24Filled />} shape="circular"></Button> */}
@@ -576,12 +679,12 @@ function AddSpecialBids() {
             <p>{headings.none}</p>
           </div>
         </div>
-        <div className="m-t-20">
+        <div className="m-t-20 a-sb-p">
           <Subtitle1 weight="bold" size={400}>
             {headings.additionalDetails}
           </Subtitle1>
         </div>
-        <div className="m-t-10 m-b-20">
+        <div className="m-t-10 m-b-20 a-sb-p">
           <GridShim columns={3} className="grid-shim">
             <div>
               <Field label="Opportunity Type">
@@ -602,7 +705,7 @@ function AddSpecialBids() {
           </GridShim>
         </div>
         <hr className="hr" />
-        <div className="m-t-20 m-b-20 b-g">
+        <div className="m-t-20 m-b-20 b-g a-sb-p">
           <Button
             onClick={() => handleSubmit("Draft")}
             type="submit"

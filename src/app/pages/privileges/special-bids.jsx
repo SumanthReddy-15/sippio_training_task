@@ -4,6 +4,7 @@ import {
   Button,
   MessageBar,
   MessageBarBody,
+  ProgressBar,
   Spinner,
   Table,
   TableBody,
@@ -52,7 +53,8 @@ const SpecialBids = () => {
   const [customLoading, setCustomLoading] = useState(false);
   const { headings } = headingsData.en;
 
-  const showLoading = customLoading || isDeleteLoading;
+  const [progressBarActive, setProgressBarActive] = useState(false);
+  const showLoading = progressBarActive || isLoading || isDeleteLoading;
 
   const handleDelete = async (id) => {
     // console.log("Deleting ID:", id);
@@ -66,9 +68,9 @@ const SpecialBids = () => {
   };
   const RefreshData = () => {
     refetchBidsData();
-    setCustomLoading(true);
+    setProgressBarActive(true);
     setTimeout(() => {
-      setCustomLoading(false);
+      setProgressBarActive(false);
     }, 3000);
   };
   useEffect(() => {
@@ -126,8 +128,12 @@ const SpecialBids = () => {
     );
   };
 
+  const renderProgressBar = () => {
+    return progressBarActive ? <ProgressBar /> : <hr className="hr" />;
+  };
+
   return (
-    <div className="border">
+    <div className="view-border">
       <ToastContainer />
       <div className="table-header">
         <AppBreadcrumbs />
@@ -156,7 +162,7 @@ const SpecialBids = () => {
           </div>
         </div>
       </div>
-      <hr className="hr" />
+      {renderProgressBar()}
       <div className="table-sb">
         <Table>
           {specialBidsData?.records?.length > 0 && (

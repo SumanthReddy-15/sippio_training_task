@@ -36,7 +36,7 @@ const ViewSpecialBids = () => {
   };
 
   return (
-    <div className="border">
+    <div className="view-border">
       <div className="table-header">
         <AppBreadcrumbs />
         <Button
@@ -114,7 +114,7 @@ const ViewSpecialBids = () => {
                         <Text> {headings.accountName} </Text>
                         <Text weight="semibold" className="m-t-10">
                           {" "}
-                          {data?.partnerName}
+                          {data?.partnerName.replace(/\s*\(.*?\)\s*/g, "")}
                         </Text>
                       </div>
                     </GridShim>
@@ -136,7 +136,7 @@ const ViewSpecialBids = () => {
                         <Text> {headings.accountName} </Text>
                         <Text weight="semibold" className="m-t-10">
                           {" "}
-                          {data?.specialBidName ? data?.specialBidName : "-"}
+                          {data?.subscriberName ? data?.subscriberName : "-"}
                         </Text>
                       </div>
                     </GridShim>
@@ -234,15 +234,17 @@ const ViewSpecialBids = () => {
                                     {headings.planConnection}:{" "}
                                     <Text weight="semibold">
                                       {price?.plan_activation
-                                        .charAt(0)
-                                        .toUpperCase() +
-                                        price?.plan_activation.slice(1)}
+                                        ? price?.plan_activation
+                                            .charAt(0)
+                                            .toUpperCase() +
+                                          price?.plan_activation.slice(1)
+                                        : ""}
                                     </Text>
                                   </div>
                                   <div>
                                     {headings.platform}:{" "}
                                     <Text weight="semibold">
-                                      {price?.platform}
+                                      {price?.platform ? price?.platform : ""}
                                     </Text>
                                   </div>
                                 </TableCell>

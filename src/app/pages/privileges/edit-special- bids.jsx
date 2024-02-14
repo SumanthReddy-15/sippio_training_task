@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 // eslint-disable-next-line no-unused-vars
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import AppBreadcrumbs from "../common/bread-crumbs";
 import "../../../assets/special-bids.scss";
 import {
@@ -14,6 +14,7 @@ import {
   Textarea,
   Option,
   Input,
+  Text,
 } from "@fluentui/react-components";
 import { TextField } from "@fluentui/react/lib/TextField";
 import { ArrowLeft24Regular } from "@fluentui/react-icons";
@@ -35,6 +36,7 @@ import ProductTable from "./product-table";
 import { DatePicker } from "@fluentui/react-datepicker-compat";
 import moment from "moment";
 import { cloneDeep } from "lodash";
+import { object } from "yup";
 
 const options = [
   "12 months",
@@ -52,40 +54,57 @@ function EditSpecialBids() {
   const [endDate, setEndDate] = useState(null);
   const { data: specialBidsData, isLoading } = useGetSpecialBidsByIdQuery(id);
   const [editSpecialBid] = useUpdateSpecialBidsMutation(id);
-  // console.log(specialBidsData);
+  console.log(specialBidsData);
   const navigate = useNavigate();
   const { data: customers } = useGetCustomerStructureQuery();
   const { data: products } = useGetProductsQuery();
   const { headings } = headingsData.en;
   const [product, setProduct] = useState([]);
+  console.log(specialBidsData?.result[0]?.committedQuantity);
+
   const [totalQuantity, setTotalQuantity] = useState(0);
   const [selectedSpecialBid, setSelectedSpecialBid] = useState();
   const [specialBidName, setSpecialBidName] = useState("");
   const [requestedName, setRequestedName] = useState("");
   const [requestedEmail, setRequestedEmail] = useState("");
   const [isFormModified, setIsFormModified] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
 
-  // const [errors, setErrors] = useState({
-  //   accountName: "",
-  //   quantity: "",
-  //   specialBidsName: "",
-  // });
+  const inputRefs = {
+    requestedName: useRef(null),
+    requestedEmail: useRef(null),
+    committedQuantity: useRef(null),
+  };
 
-  // const validate = () => {
-  //   let tempErrors = { ...errors };
-
-  //   tempErrors.quantity = totalQuantity ? "" : "Total quantity is required";
-  //   tempErrors.requestedEmail = validateEmail(requestedEmail)
-  //     ? ""
-  //     : "Invalid email address";
-  //   setErrors(tempErrors);
-  //   return Object.values(tempErrors).every((x) => x === "");
-  // };
-
-  // const validateEmail = (email) => {
-  //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  //   return emailRegex.test(email);
-  // };
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.requestedName.trim()) {
+      errors.requestedName = "Partner Point of Contact Name is required";
+      inputRefs.requestedName.current.focus();
+    }
+    if (!formData.requestedEmail.trim()) {
+      errors.requestedEmail = "Partner Point of Contact Email is required";
+      if (!errors.requestedName) {
+        inputRefs.requestedEmail.current.focus();
+      }
+    } else if (
+      !/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(
+        formData.requestedEmail
+      )
+    ) {
+      errors.requestedEmail = "Invalid email format";
+      if (!errors.requestedName) {
+        inputRefs.requestedEmail.current.focus();
+      }
+    }
+    if (!formData.committedQuantity.trim()) {
+      errors.committedQuantity = "Committed quantity required";
+      if (!errors.committedQuantity) {
+        inputRefs.committedQuantity.current.focus();
+      }
+    }
+    return errors;
+  };
 
   const handleTotalQuantityChange = (newTotal) => {
     setTotalQuantity(newTotal);
@@ -138,10 +157,25 @@ function EditSpecialBids() {
       ...prevFormData,
       [field]: e.target.value,
     }));
+    if (validationErrors[field]) {
+      setValidationErrors((prevErrors) => ({
+        ...prevErrors,
+        [field]: "",
+      }));
+    }
     // console.log("After update:", formData);
     setIsFormModified(true);
   };
 
+  const handleBlur = (field) => {
+    const errors = validateField(field, formData[field]);
+    if (errors) {
+      setValidationErrors((prevErrors) => ({
+        ...prevErrors,
+        ...errors,
+      }));
+    }
+  };
   // const handleDropdownChange = (field, e) => {
   //   console.log("contractTerm......", e);
   //   setFormData((prevFormData) => ({
@@ -420,7 +454,7 @@ function EditSpecialBids() {
             id: product.productId || "",
             country: product.availabilityName || "",
             plan_activation: plan_activation,
-            // buyingPrice: buyingPrice,
+            buyingPrice: buyingPrice,
             comments: product.comments || "",
             location: product.serviceLocations || "",
             platform: platform,
@@ -436,10 +470,24 @@ function EditSpecialBids() {
       });
     const newData = await [...modalData, modelData[0]];
     const finalData = await newData[0];
+    const committedQuantity =
+      specialBidsData && specialBidsData?.result
+        ? specialBidsData?.result[0]?.committedQuantity
+        : specialBidsData?.result;
+    console.log("committedQuantity", committedQuantity);
+    await setTotalQuantity(committedQuantity);
     await setModalData(finalData);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
+    const errors = validateForm();
+
+    if (Object.keys(errors).length) {
+      setValidationErrors(errors);
+      return;
+    }
+    setValidationErrors({});
     const isDataEdited = Object.values(formData).some((value) => value !== "");
 
     if (!isDataEdited) {
@@ -480,6 +528,7 @@ function EditSpecialBids() {
     const index = await modalData.filter(
       (item) => item.renderId === data.renderId
     );
+    console.log(index);
     if (index.length === 1) {
       const updatedData = await modalData.map((item, i) =>
         i === data.renderId ? data : item
@@ -548,11 +597,30 @@ function EditSpecialBids() {
           },
         ],
       };
-
+      console.log(modalData);
+      console.log(formData);
       setFormData(updatedFormData);
     }
 
     await setIsDialogOpen(false);
+  };
+
+  const handleDeleteClick = async (productData) => {
+    const filteredModalData = modalData.filter(
+      (item) => item.renderId !== productData?.renderId
+    );
+    console.log("filteredModalData", filteredModalData);
+    await setModalData(filteredModalData);
+
+    const updatedProducts = formData.products.filter(
+      (product) => product.renderId !== productData?.renderId
+    );
+    const updatedFormData = {
+      ...formData,
+      products: updatedProducts,
+    };
+    console.log("updatedFormData", updatedFormData);
+    await setFormData(updatedFormData);
   };
 
   const handleRadioChange = (event, name) => {
@@ -580,7 +648,7 @@ function EditSpecialBids() {
       {specialBidsData &&
         specialBidsData?.result.map((data, i) => (
           <div key={i} className="table">
-            <div>
+            <div className="a-sb-p">
               <GridShim columns={3} className="grid-shim">
                 <div>
                   <Subtitle1 weight="bold" size={400}>
@@ -595,30 +663,31 @@ function EditSpecialBids() {
               </GridShim>
             </div>
 
-            <div className="m-t-10">
+            <div className="m-t-10 a-sb-p">
               <GridShim columns={3} className="grid-shim">
                 <div>
-                  <Field label="Account Name & Account Number" required>
-                    <Input disabled value={data?.partnerName} />
+                  <Field label="Account Name & Account Number">
+                    <Text weight="semibold">{data?.partnerName}</Text>
+
                     {/* {errors.accountName && (
                       <div className="error-message">{errors.accountName}</div>
                     )} */}
                   </Field>
                 </div>
                 <div>
-                  <Field label="Account Name & Account Number" required>
-                    <Input disabled value={data?.subscriberName} />
+                  <Field label="Account Name & Account Number">
+                    <Text weight="semibold">{data?.subscriber}</Text>
                   </Field>
                 </div>
               </GridShim>
             </div>
 
-            <div className="m-t-20">
+            <div className="m-t-20 a-sb-p">
               <Subtitle1 weight="bold" size={400}>
                 {headings.specialBidsDetails}
               </Subtitle1>
             </div>
-            <div className="m-t-10">
+            <div className="m-t-10 a-sb-p">
               <GridShim columns={3} className="grid-shim">
                 <div>
                   <Field label="Special Bid Type">
@@ -643,16 +712,20 @@ function EditSpecialBids() {
                 </div>
               </GridShim>
             </div>
-            <div className="m-t-20">
+            <div className="m-t-20 a-sb-p">
               <Subtitle1 weight="bold" size={400}>
                 {headings.contactDetails}
               </Subtitle1>
             </div>
-            <div className="m-t-10">
+            <div className="m-t-10 a-sb-p">
               <GridShim columns={3} className="grid-shim">
                 <div>
-                  <Field label="Request Prepared by" required>
-                    <Input value={userEmail} onChange={handleEmailChange} />
+                  <Field label="Request Prepared by">
+                    <Input
+                      value={userEmail}
+                      onChange={handleEmailChange}
+                      disabled
+                    />
                   </Field>
                 </div>
                 <div>
@@ -660,7 +733,13 @@ function EditSpecialBids() {
                     <Input
                       onChange={(e) => handleInputChange("requestedName", e)}
                       defaultValue={data?.requestedName}
+                      ref={inputRefs.requestedName}
                     />
+                    {validationErrors.requestedName && (
+                      <div className="error-message">
+                        {validationErrors.requestedName}
+                      </div>
+                    )}
                   </Field>
                 </div>
                 <div>
@@ -669,17 +748,20 @@ function EditSpecialBids() {
                       type="email"
                       onChange={(e) => handleInputChange("requestedEmail", e)}
                       defaultValue={data?.requestedEmail}
+                      onBlur={() => handleBlur("requestedEmail")}
+                      ref={inputRefs.requestedEmail}
                     />
-                    {/* {errors.requestedEmail && (
+                    {validationErrors.requestedEmail && (
                       <div className="error-message">
-                        {errors.requestedEmail}
+                        {" "}
+                        {validationErrors.requestedEmail}{" "}
                       </div>
-                    )} */}
+                    )}
                   </Field>
                 </div>
               </GridShim>
             </div>
-            <div className="card-product m-t-20">
+            <div className="card-product m-t-20 a-sb-m">
               <div className="product">
                 <h3>{headings.productsServices}</h3>
                 <div className="m-t-10" onClick={handleOpenDialog}>
@@ -716,18 +798,19 @@ function EditSpecialBids() {
                     onSubmitData={onSubmitData}
                     partnerId={selectedParent}
                     parentDetails={uniqueParentDetails}
+                    handleDeleteClick={handleDeleteClick}
                   />
                 ) : (
                   <p>{headings.none}</p>
                 )}
               </div>
             </div>
-            <div className="m-t-20">
+            <div className="m-t-20 a-sb-p">
               <Subtitle1 weight="bold" size={400}>
                 {headings.contractDetails}
               </Subtitle1>
             </div>
-            <div className="m-t-10">
+            <div className="m-t-10 a-sb-p">
               <GridShim columns={3} className="grid-shim">
                 <div>
                   <Field label="Contract Term" required>
@@ -749,14 +832,16 @@ function EditSpecialBids() {
                 <div>
                   <Field label="Total Committed Quantity" required>
                     <Input
-                      disabled
+                      // defaultValue={data?.committedQuantity}
                       defaultValue={data?.committedQuantity}
-                      value={totalQuantity > 0 ? totalQuantity : ""}
+                      onChange={(e) => handleInputChange("quantity", e)}
                     />
 
-                    {/* {errors.quantity && (
-                      <div className="error-message">{errors.quantity}</div>
-                    )} */}
+                    {validationErrors.committedQuantity && (
+                      <div className="error-message">
+                        {validationErrors.committedQuantity}
+                      </div>
+                    )}
                   </Field>
                 </div>
               </GridShim>
@@ -773,12 +858,12 @@ function EditSpecialBids() {
                 </div>
               </GridShim>
             </div>
-            <div className="m-t-20">
+            <div className="m-t-20 a-sb-p">
               <Field label="Comments/Requirements">
                 <Textarea resize="vertical"></Textarea>
               </Field>
             </div>
-            <div className="card-product m-t-20">
+            <div className="card-product m-t-20 a-sb-m">
               <div className="product">
                 <h3>{headings.attachments}</h3>
                 {/* <Button icon={<Add24Filled />} shape="circular"></Button> */}
@@ -800,12 +885,12 @@ function EditSpecialBids() {
                 <p>{headings.none}</p>
               </div>
             </div>
-            <div className="m-t-20">
+            <div className="m-t-20 a-sb-p">
               <Subtitle1 weight="bold" size={400}>
                 {headings.additionalDetails}
               </Subtitle1>
             </div>
-            <div className="m-t-10 m-b-20">
+            <div className="m-t-10 m-b-20 a-sb-p">
               <GridShim columns={3} className="grid-shim">
                 <div>
                   <Field label="Opportunity Type">
@@ -826,18 +911,15 @@ function EditSpecialBids() {
               </GridShim>
             </div>
             <hr className="hr" />
-            <div className="m-t-20 m-b-20 b-g">
+            <div className="m-t-20 m-b-20 b-g a-sb-p">
               <Button
-                onClick={() => handleSubmit("Draft")}
+                onClick={(e) => handleSubmit(e)}
                 type="submit"
                 appearance="primary"
               >
                 {headings.saveDraft}
               </Button>
-              <Button
-                onClick={() => handleSubmit("Request Created")}
-                appearance="primary"
-              >
+              <Button onClick={(e) => handleSubmit(e)} appearance="primary">
                 {headings.submitRequest}
               </Button>
               <Button onClick={handleLastPage}>{headings.cancel}</Button>

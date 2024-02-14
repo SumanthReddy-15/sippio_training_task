@@ -77,11 +77,13 @@ const Sidebar = () => {
             )}
           </div>
           <div className={sidebarClass}>
-            {tabs.map((section) => (
-              <div key={section.heading}>
+            {tabs.map((section, sectionIndex) => (
+              <div key={sectionIndex}>
+                {" "}
                 {isExpanded && <h3>{section.heading}</h3>}
                 {section.items.map((tab) => (
                   <div key={tab.id}>
+                    {" "}
                     <MenuItem
                       icon={tab.icon}
                       onClick={() =>
@@ -112,6 +114,8 @@ const Sidebar = () => {
                       tab.submenu &&
                       tab.submenu.map((submenuItem) => (
                         <MenuItem key={submenuItem.id} icon={submenuItem.icon}>
+                          {" "}
+                          {/* Key exists */}
                           {isExpanded ? (
                             <Link to={submenuItem.route} className="link">
                               {submenuItem.name}
