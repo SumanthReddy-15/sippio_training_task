@@ -27,6 +27,7 @@ import AppBreadcrumbs from "../common/bread-crumbs";
 import { Link } from "react-router-dom";
 import {
   useDeleteSpecialBidsMutation,
+  useGetPrivilegesQuery,
   useGetSpecialBidsQuery,
 } from "../../store/usersApi";
 import headingsData from "../common/json-data";
@@ -49,6 +50,12 @@ const SpecialBids = () => {
     deleteSpecialBids,
     { isLoading: isDeleteLoading, error: deleteError },
   ] = useDeleteSpecialBidsMutation();
+  const {
+    data: privilegesData,
+    isSuccess,
+    refetch: refetchPrivileges,
+  } = useGetPrivilegesQuery();
+  console.log("privilegesData", privilegesData);
 
   const [customLoading, setCustomLoading] = useState(false);
   const { headings } = headingsData.en;
@@ -75,6 +82,7 @@ const SpecialBids = () => {
   };
   useEffect(() => {
     refetchBidsData();
+    refetchPrivileges();
   }, []);
 
   useEffect(() => {
@@ -155,6 +163,11 @@ const SpecialBids = () => {
                 icon={<Add24Filled />}
                 className="btn"
                 appearance="primary"
+                disabled={
+                  privilegesData && privilegesData?.records?.includes("SBR-ADD")
+                    ? false
+                    : true
+                }
               >
                 {headings.add}
               </Button>
@@ -272,40 +285,49 @@ const SpecialBids = () => {
                     </TableCell>
                     <TableCell>
                       <div className="b-g">
-                        <Tooltip content="View" relationship="label">
-                          <Link
-                            to={{
-                              pathname: `/specialBids/${bid.id}/view`,
-                            }}
-                          >
+                        {privilegesData &&
+                        privilegesData?.records?.includes("SBR-VIW") ? (
+                          <Tooltip content="View" relationship="label">
+                            <Link
+                              to={{
+                                pathname: `/specialBids/${bid.id}/view`,
+                              }}
+                            >
+                              <Button
+                                icon={<EyeRegular className="i-color" />}
+                                aria-label="View"
+                                appearance="transparent"
+                              />
+                            </Link>
+                          </Tooltip>
+                        ) : null}
+                        {privilegesData &&
+                        privilegesData?.records?.includes("SBR-EDT") ? (
+                          <Tooltip content="Edit" relationship="label">
+                            <Link
+                              to={{
+                                pathname: `/specialBids/${bid.id}/edit`,
+                              }}
+                            >
+                              <Button
+                                icon={<EditRegular className="i-color" />}
+                                aria-label="Edit"
+                                appearance="transparent"
+                              />
+                            </Link>
+                          </Tooltip>
+                        ) : null}
+                        {privilegesData &&
+                        privilegesData?.records?.includes("SBR-DEL") ? (
+                          <Tooltip content="Delete" relationship="label">
                             <Button
-                              icon={<EyeRegular className="i-color" />}
-                              aria-label="View"
+                              icon={<DeleteRegular className="i-color" />}
+                              aria-label="Delete"
                               appearance="transparent"
+                              onClick={() => handleDelete(bid.id)}
                             />
-                          </Link>
-                        </Tooltip>
-                        <Tooltip content="Edit" relationship="label">
-                          <Link
-                            to={{
-                              pathname: `/specialBids/${bid.id}/edit`,
-                            }}
-                          >
-                            <Button
-                              icon={<EditRegular className="i-color" />}
-                              aria-label="Edit"
-                              appearance="transparent"
-                            />
-                          </Link>
-                        </Tooltip>
-                        <Tooltip content="Delete" relationship="label">
-                          <Button
-                            icon={<DeleteRegular className="i-color" />}
-                            aria-label="Delete"
-                            appearance="transparent"
-                            onClick={() => handleDelete(bid.id)}
-                          />
-                        </Tooltip>
+                          </Tooltip>
+                        ) : null}
                       </div>
                     </TableCell>
                   </TableRow>

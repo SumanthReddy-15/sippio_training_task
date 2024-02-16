@@ -1,6 +1,9 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
 import {
   Button,
+  MessageBar,
+  MessageBarBody,
   Table,
   TableBody,
   TableCell,
@@ -24,13 +27,18 @@ const ProductTable = ({
   partnerId,
   parentDetails,
   handleDeleteClick,
+  submitAttempted,
 }) => {
+  console.log("productData..", productData);
+  console.log("parentDetails", parentDetails);
+  console.log("submitAttempted", submitAttempted);
   const { id } = useParams();
   // console.log("productData..........", productData);
   const { data: specialBidsData } = useGetSpecialBidsByIdQuery(id);
   const { headings } = headingsData.en;
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedProductForEdit, setSelectedProductForEdit] = useState(null);
+  console.log("selectedProductForEdit...", selectedProductForEdit);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [modalData, setModalData] = useState([]);
   const handleOpenDialog = () => {
@@ -46,7 +54,7 @@ const ProductTable = ({
   }, [productData, onTotalQuantityChange]);
 
   const handleEditClick = (product) => {
-    // console.log("handleEditClick", product);
+    console.log("handleEditClick", product);
     setSelectedProductForEdit(product);
     handleOpenDialog();
     // console.log("product.....", product);
@@ -190,6 +198,12 @@ const ProductTable = ({
               })}
           </TableBody>
         </Table>
+      ) : submitAttempted ? (
+        <MessageBar className="p-message">
+          <MessageBarBody>
+            Please add at least one product before submitting.
+          </MessageBarBody>
+        </MessageBar>
       ) : (
         <p>{headings.none}</p>
       )}
@@ -206,6 +220,7 @@ const ProductTable = ({
           // selectedProductForEdit={selectedProductForEdit}
           modalData={selectedProductForEdit}
           modelStatus={"edit"}
+          productData={productData}
         />
       }
     </div>

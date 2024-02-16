@@ -42,7 +42,7 @@ const options = [
   "60 months",
 ];
 
-function AddSpecialBids() {
+function AddSpecialBids({ productData }) {
   const { accounts, instance } = useMsal();
   const [userData, setUserData] = useState({});
   const [startDate, setStartDate] = useState(null);
@@ -174,7 +174,11 @@ function AddSpecialBids() {
   const handleEmailChange = (event) => {
     setUserEmail(event.target.value);
   };
-  const handleInputChange = () => {
+  const handleInputChange = (value, fieldKey) => {
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [fieldKey]: "",
+    }));
     setIsFormModified(true);
   };
 
@@ -203,6 +207,10 @@ function AddSpecialBids() {
   const [selectedOption, setSelectedOption] = useState(null);
 
   const handleOptionChange = (event, option) => {
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      subscriberDetails: "",
+    }));
     let val = option?.optionText;
     setSelectedOption(val);
   };
@@ -215,6 +223,10 @@ function AddSpecialBids() {
     setSelectedSubscriber(selectedSubscriber);
     // let [selectedName, selectedAccount] = selectedDetails.split(" (");
     // selectedAccount = selectedAccount.slice(0, -1);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      partnerDetails: "",
+    }));
 
     let data = customers.records.filter((obj) => {
       return (
@@ -229,6 +241,10 @@ function AddSpecialBids() {
 
   const handleAccountChange = (event) => {
     // console.log(event, event.target.textContent);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      subscriberDetails: "",
+    }));
     setSelectedAccount(event.target.textContent);
     setIsCustomerSelected(!!event.target.textContent);
   };
@@ -249,6 +265,8 @@ function AddSpecialBids() {
     : null;
 
   const handleSubmit = async (processStatus) => {
+    setSubmitAttempted(true);
+
     if (!validate()) return;
     let subscriberId = selectedAccount?.match(/\(([^)]+)\)/)[1];
     let subscriberName = selectedAccount
@@ -280,6 +298,7 @@ function AddSpecialBids() {
           platform: product?.platform,
           chargeName: price?.chargeName,
           buyingPrice: price?.buyingPrice,
+          chargeType: price?.chargeType,
         })),
         comments: product.comments,
       })),
@@ -316,7 +335,6 @@ function AddSpecialBids() {
     console.log("modalData", modalData);
 
     // console.log("formData....", formData);
-    setSubmitAttempted(true);
     if (!validate() || modalData.length === 0) return;
     addSpecialBids(formData)
       .unwrap()
@@ -344,8 +362,9 @@ function AddSpecialBids() {
   const onSubmitData = (data) => {
     // console.log("add-special-bid.js", data);
     const newData = [...modalData, data];
-    // console.log("add-special-bid.js----newData", data);
+    console.log("add-special-bid.js----newData", data);
     setModalData(newData);
+    console.log("newData", modalData);
     // toggleDialog();
     handleCloseDialog();
   };
@@ -496,7 +515,7 @@ function AddSpecialBids() {
                 <Input
                   onChange={(event) => {
                     setRequestedName(event.target.value);
-                    handleInputChange();
+                    handleInputChange(event.target.value, "contactName");
                   }}
                   ref={inputRefs.contactName}
                 />
@@ -511,7 +530,7 @@ function AddSpecialBids() {
                   type="email"
                   onChange={(event) => {
                     setRequestedEmail(event.target.value);
-                    handleInputChange();
+                    handleInputChange(event.target.value, "requestedEmail");
                   }}
                   onBlur={() => {
                     const emailValue = inputRefs.requestedEmail.current.value;
@@ -558,7 +577,10 @@ function AddSpecialBids() {
                 viewBox="0 0 50 50"
                 cursor="pointer"
               >
-                <path d="M 25 2 C 12.309295 2 2 12.309295 2 25 C 2 37.690705 12.309295 48 25 48 C 37.690705 48 48 37.690705 48 25 C 48 12.309295 37.690705 2 25 2 z M 25 4 C 36.609824 4 46 13.390176 46 25 C 46 36.609824 36.609824 46 25 46 C 13.390176 46 4 36.609824 4 25 C 4 13.390176 13.390176 4 25 4 z M 24 13 L 24 24 L 13 24 L 13 26 L 24 26 L 24 37 L 26 37 L 26 26 L 37 26 L 37 24 L 26 24 L 26 13 L 24 13 z"></path>
+                <path
+                  fill="#0078d4"
+                  d="M 25 2 C 12.309295 2 2 12.309295 2 25 C 2 37.690705 12.309295 48 25 48 C 37.690705 48 48 37.690705 48 25 C 48 12.309295 37.690705 2 25 2 z M 25 4 C 36.609824 4 46 13.390176 46 25 C 46 36.609824 36.609824 46 25 46 C 13.390176 46 4 36.609824 4 25 C 4 13.390176 13.390176 4 25 4 z M 24 13 L 24 24 L 13 24 L 13 26 L 24 26 L 24 37 L 26 37 L 26 26 L 37 26 L 37 24 L 26 24 L 26 13 L 24 13 z"
+                ></path>
               </svg>
             </div>
             {isDialogOpen && (
@@ -568,8 +590,9 @@ function AddSpecialBids() {
                 onSubmitData={onSubmitData}
                 partnerId={selectedParent}
                 parentDetails={uniqueParentDetails}
-                modalData={null}
+                modalData={modalData}
                 modelStatus={"add"}
+                productData={productData}
               />
             )}
           </div>
@@ -583,13 +606,8 @@ function AddSpecialBids() {
                 partnerId={selectedParent}
                 parentDetails={uniqueParentDetails}
                 handleDeleteClick={handleDeleteClick}
+                submitAttempted={submitAttempted}
               />
-            ) : submitAttempted ? (
-              <MessageBar>
-                <MessageBarBody>
-                  Please add at least one product before submitting.
-                </MessageBarBody>
-              </MessageBar>
             ) : (
               <p>{headings.none}</p>
             )}
@@ -623,6 +641,9 @@ function AddSpecialBids() {
               <Field label="Total Committed Quantity" required>
                 <Input
                   value={totalQuantity > 0 ? totalQuantity : ""}
+                  onChange={(event) => {
+                    handleInputChange(event.target.value, "quantity");
+                  }}
                   ref={inputRefs.quantity}
                 />
                 {errors.quantity && (
@@ -671,7 +692,10 @@ function AddSpecialBids() {
                 viewBox="0 0 50 50"
                 cursor="pointer"
               >
-                <path d="M 25 2 C 12.309295 2 2 12.309295 2 25 C 2 37.690705 12.309295 48 25 48 C 37.690705 48 48 37.690705 48 25 C 48 12.309295 37.690705 2 25 2 z M 25 4 C 36.609824 4 46 13.390176 46 25 C 46 36.609824 36.609824 46 25 46 C 13.390176 46 4 36.609824 4 25 C 4 13.390176 13.390176 4 25 4 z M 24 13 L 24 24 L 13 24 L 13 26 L 24 26 L 24 37 L 26 37 L 26 26 L 37 26 L 37 24 L 26 24 L 26 13 L 24 13 z"></path>
+                <path
+                  fill="#0078d4"
+                  d="M 25 2 C 12.309295 2 2 12.309295 2 25 C 2 37.690705 12.309295 48 25 48 C 37.690705 48 48 37.690705 48 25 C 48 12.309295 37.690705 2 25 2 z M 25 4 C 36.609824 4 46 13.390176 46 25 C 46 36.609824 36.609824 46 25 46 C 13.390176 46 4 36.609824 4 25 C 4 13.390176 13.390176 4 25 4 z M 24 13 L 24 24 L 13 24 L 13 26 L 24 26 L 24 37 L 26 37 L 26 26 L 37 26 L 37 24 L 26 24 L 26 13 L 24 13 z"
+                ></path>
               </svg>
             </div>
           </div>

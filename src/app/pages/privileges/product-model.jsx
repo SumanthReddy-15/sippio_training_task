@@ -26,6 +26,7 @@ import {
   Text,
   Textarea,
   Spinner,
+  MessageBar,
 } from "@fluentui/react-components";
 import { Dismiss24Filled } from "@fluentui/react-icons";
 import { GridShim } from "@fluentui/react-migration-v0-v9";
@@ -41,17 +42,22 @@ const ProductModel = ({
   parentDetails,
   modalData,
   modelStatus,
+  productData,
 }) => {
+  console.log("productData...", productData);
   // console.log("modalData...", modalData);
   // console.log(partnerId);
   const [showLoading, setShowLoading] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState("");
-  const [productData, setProductData] = useState();
+  const [productsData, setProductData] = useState();
   const [progressBarActive, setProgressBarActive] = useState(false);
   const [plainTypeData, setPlainTypeData] = useState();
   const [selectedRadio, setSelectedRadio] = useState();
   const [filteredProducts, setFilteredProducts] = useState([]);
+  console.log("filteredProducts", filteredProducts);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [platformOptions, setPlatformOptions] = useState([]);
   const DEFAULT_ADDITIONAL_DATA = {
     platform: "",
     quantity: "",
@@ -61,6 +67,7 @@ const ProductModel = ({
     productName: "",
     productCode: "",
     productDescription: "",
+    chargeType: "",
   };
   const [additionalFields, setAdditionalFields] = useState({
     platform: "",
@@ -71,6 +78,7 @@ const ProductModel = ({
     productName: "",
     productCode: "",
     productDescription: "",
+    chargeType: "",
   });
   const { headings } = headingsData.en;
   const {
@@ -94,14 +102,57 @@ const ProductModel = ({
     );
     setFilteredProducts(filtered);
   }, [selectedCountry, products]);
+  console.log("products", products);
 
   const closeDialog = (event) => {
     event.preventDefault();
     event.stopPropagation();
     onClose();
   };
+  useEffect(() => {
+    if (modalData && modelStatus === "edit" && filteredProducts?.length > 0) {
+      setShowLoading(true);
+
+      const productName = modalData?.productName;
+      const productCode = modalData?.productCode;
+      const selectedProduct = filteredProducts?.find(
+        (product) =>
+          product?.productName === productName &&
+          product?.productCode === productCode
+      );
+
+      if (selectedProduct) {
+        setSelectedCountry(modalData?.country);
+        setSelectedProduct(`${productName} (${productCode})`);
+        setSelectedRadio(modalData?.plan_activation);
+
+        if (selectedProduct?.communicationPlatforms) {
+          setPlatformOptions(
+            selectedProduct?.communicationPlatforms?.map(
+              (platform) => platform?.name
+            )
+          );
+        }
+
+        setAdditionalFields({
+          platform: modalData.platform,
+          quantity: modalData.quantity,
+          locations: modalData.location,
+          comments: modalData.comments,
+          requestedPrice: modalData.requestedPrice,
+          productName: productName,
+          productCode: productCode,
+          productDescription: modalData.productDescription,
+          chargeType: modalData.chargeType,
+        });
+      }
+
+      setShowLoading(false);
+    }
+  }, [modalData, modelStatus, filteredProducts]);
 
   const handleCountrySelect = (event, country) => {
+    event.persist();
     const newSelectedCountry = country?.optionValue;
     setSelectedCountry(newSelectedCountry);
     setProgressBarActive(true);
@@ -136,7 +187,7 @@ const ProductModel = ({
   const onPlanChange = (event) => {
     let selectedPlan = event.target.value;
     setSelectedRadio(selectedPlan);
-    let data = productData?.planTypes?.filter((obj) => {
+    let data = productsData?.planTypes?.filter((obj) => {
       return obj.planName?.toLowerCase() === selectedPlan;
     });
     setPlainTypeData(data);
@@ -162,11 +213,46 @@ const ProductModel = ({
       productName: additionalFields.productName,
       productCode: additionalFields.productCode,
       productDescription: additionalFields.productDescription,
+      chargeType: additionalFields.chargeType,
       renderId: modalData?.renderId,
     };
 
+    const isDuplicate = checkForDuplicate(submissionData);
+
+    if (isDuplicate) {
+      const error =
+        "Duplicate data found. Please change the data and submit again.";
+      setErrorMessage(error);
+      return;
+    }
+    setErrorMessage("");
     console.log("Submitting data:", submissionData);
     onSubmitData(submissionData);
+  };
+
+  const checkForDuplicate = (newData) => {
+    if (!modalData || typeof modalData !== "object") {
+      return false;
+    }
+    if (Array.isArray(modalData)) {
+      return modalData.some((existingData) => {
+        return (
+          existingData.productName === newData.productName &&
+          existingData.productCode === newData.productCode &&
+          existingData.country === newData.country &&
+          existingData.plan_activation === newData.plan_activation &&
+          existingData.platform === newData.platform
+        );
+      });
+    } else {
+      return (
+        modalData.productName === newData.productName &&
+        modalData.productCode === newData.productCode &&
+        modalData.country === newData.country &&
+        modalData.plan_activation === newData.plan_activation &&
+        modalData.platform === newData.platform
+      );
+    }
   };
 
   const handlePlatformChange = (event, platform) => {
@@ -196,10 +282,11 @@ const ProductModel = ({
     // );
     if (modelzone && modelStatus === "edit") {
       setShowLoading(true);
-      const productData = {
+      const productsData = {
         productName: modalData.productName,
         productCode: modalData.productCode,
       };
+      console.log("productsData", productsData);
       const uniquePlainTypes = [
         ...new Set(modalData.plan_activation?.split(", ")),
       ].join(", ");
@@ -211,10 +298,11 @@ const ProductModel = ({
       ].join(", ");
 
       const plainTypes = [{ pricing: modalData.chargeName }];
+      console.log("plainTypes", plainTypes);
       // console.log("plainTypes...", plainTypes);
       setSelectedCountry(modalData.country);
-      setProductData(productData?.productName);
-      setSelectedProduct(productData?.productName);
+      setProductData(productsData?.productName);
+      setSelectedProduct(productsData?.productName);
       setSelectedRadio(uniquePlainTypes);
       setPlainTypeData(plainTypes);
       setAdditionalFields({
@@ -226,6 +314,7 @@ const ProductModel = ({
         productName: modalData.productName,
         productCode: modalData.productCode,
         productDescription: modalData.productDescription,
+        chargeType: modalData.chargeType,
       });
       // setIsEditMode(!!modalData.id);
       setShowLoading(false);
@@ -233,6 +322,7 @@ const ProductModel = ({
       // setIsEditMode(false);
     }
   }, [modalData, modelStatus]);
+  console.log("modalData", modalData);
 
   const renderAdditionalFields = () => {
     if (selectedRadio === "activation" || selectedRadio === "porting") {
@@ -245,14 +335,19 @@ const ProductModel = ({
                   <Dropdown
                     onOptionSelect={handlePlatformChange}
                     value={additionalFields.platform}
-                    disabled={modelStatus === "edit" ? true : false}
+                    // disabled={modelStatus === "edit" ? true : false}
                   >
-                    {productData &&
-                      productData?.communicationPlatforms?.map((obj, i) => (
-                        <Option key={i} textContent={obj.name}>
-                          {obj.name}
-                        </Option>
-                      ))}
+                    {platformOptions.length > 0
+                      ? platformOptions.map((platform, i) => (
+                          <Option key={i} textContent={platform}>
+                            {platform}
+                          </Option>
+                        ))
+                      : productsData?.communicationPlatforms?.map((obj, i) => (
+                          <Option key={i} textContent={obj.name}>
+                            {obj.name}
+                          </Option>
+                        ))}
                   </Dropdown>
                 </Field>
               </div>
@@ -391,6 +486,11 @@ const ProductModel = ({
                 <div className="db-w">
                   {renderProgressBar()}
                   <div className="dialog-data">
+                    {errorMessage && (
+                      <div style={{ marginBottom: "10px" }}>
+                        <MessageBar intent="error">{errorMessage}</MessageBar>
+                      </div>
+                    )}
                     <div className="m-t-10 ">
                       <div>
                         <GridShim columns={3} className="grid-shim">
@@ -475,7 +575,7 @@ const ProductModel = ({
                   </div>
                 </div>
               </DialogContent>
-              <DialogActions>
+              <DialogActions position="start">
                 <div className="m-t-20 b-g">
                   <Button
                     type="submit"

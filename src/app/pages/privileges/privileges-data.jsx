@@ -15,9 +15,10 @@ const PrivilegesData = () => {
   ];
 
   const [privileges, setPrivileges] = useState(initialPrivileges);
-  const { data: privilegesData, isSuccess } = useGetPrivilegesQuery();
+  const { data: privilegesData, isSuccess, refetch } = useGetPrivilegesQuery();
   const [postPrivileges, { isSuccess: isPostSuccess, isError: isPostError }] =
     usePostPrivilegesMutation();
+  const [isFormModified, setIsFormModified] = useState(false);
 
   useEffect(() => {
     if (isSuccess && privilegesData?.records) {
@@ -33,7 +34,12 @@ const PrivilegesData = () => {
   const handleCheckboxChange = (partCode) => {
     const updatedPrivileges = privileges.map((privilege) => {
       if (privilege.partCode === partCode) {
-        return { ...privilege, isChecked: !privilege.isChecked };
+        const updatedPrivilege = {
+          ...privilege,
+          isChecked: !privilege.isChecked,
+        };
+        setIsFormModified(true); // Mark the form as modified
+        return updatedPrivilege;
       }
       return privilege;
     });
@@ -55,6 +61,8 @@ const PrivilegesData = () => {
     } catch (error) {
       console.error("Error submitting form:", error);
     }
+    refetch();
+    setIsFormModified(false); // Reset form modification status after submission
   };
 
   const renderCheckboxes = () => {
@@ -76,7 +84,9 @@ const PrivilegesData = () => {
       <hr className="hr" />
       <div className="header-view">
         {renderCheckboxes()}
-        <Button onClick={handleSubmit}>Submit Changes</Button>
+        <Button onClick={handleSubmit} disabled={!isFormModified}>
+          Submit Changes
+        </Button>{" "}
       </div>
     </div>
   );

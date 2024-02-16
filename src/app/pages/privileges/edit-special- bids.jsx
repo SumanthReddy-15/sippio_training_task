@@ -209,7 +209,7 @@ function EditSpecialBids() {
   const [selectedParent, setSelectedParent] = useState(null);
   const [selectedSubscriber, setSelectedSubscriber] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
-
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const handleOptionChange = (event, option) => {
     let val = option?.optionText;
     setFormData((prevFormData) => ({
@@ -319,6 +319,7 @@ function EditSpecialBids() {
           plan_activation: "",
           platform: "",
           chargeName: "",
+          chargeType: "",
           buyingPrice: "",
         },
       ],
@@ -387,6 +388,7 @@ function EditSpecialBids() {
             plan_activation: price.plan_activation || "",
             platform: price.platform || "",
             chargeName: price.chargeName || "",
+            chargeType: price.chargeType || "",
             buyingPrice: price.buyingPrice || "",
           })),
           comments: product.comments || "",
@@ -461,6 +463,7 @@ function EditSpecialBids() {
             quantity: product.quantity || "",
             requestedPrice: requestedPrice,
             chargeName: product.pricing,
+            chargeType: product.chargeType,
             productName: product.productName || "",
             productCode: product.productCode || "",
             productDescription: product.productDescription || "",
@@ -480,6 +483,7 @@ function EditSpecialBids() {
   };
 
   const handleSubmit = async (e) => {
+    setSubmitAttempted(true);
     e?.preventDefault();
     const errors = validateForm();
 
@@ -799,6 +803,7 @@ function EditSpecialBids() {
                     partnerId={selectedParent}
                     parentDetails={uniqueParentDetails}
                     handleDeleteClick={handleDeleteClick}
+                    submitAttempted={submitAttempted}
                   />
                 ) : (
                   <p>{headings.none}</p>
@@ -834,6 +839,7 @@ function EditSpecialBids() {
                     <Input
                       // defaultValue={data?.committedQuantity}
                       defaultValue={data?.committedQuantity}
+                      value={totalQuantity > 0 ? totalQuantity : ""}
                       onChange={(e) => handleInputChange("quantity", e)}
                     />
 
